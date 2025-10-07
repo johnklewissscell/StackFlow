@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Simulator</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/vendor/chartjs-chart-financial.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <!-- load financial plugin from /vendor/chartjs-chart-financial.min.js -->
+</head>
+<body>
+  <h1>StackFlow</h1>
+
+  <div id="container">
+    <div id="controls">
+      <p>Balance: $<span id="balance">10000</span></p>
+      <input type="text" id="symbol" placeholder="Enter stock symbol (AAPL)">
+  <button id="getStock">Get Price</button>
+  <button id="toggleCandle" style="margin-left:8px;">Try Candlestick</button>
+      <div id="stock-info"></div>
+      <div id="time-range">
+        <button data-range="1D">1D</button>
+        <button data-range="1M">1M</button>
+        <button data-range="1Y">1Y</button>
+        <button data-range="5Y">5Y</button>
+      </div>
+    </div>
+
+    <div id="chart-container" style="display:none; height:400px;">
+      <canvas id="stockChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Simple StackAI chat panel -->
+  <div id="chat-panel" style="border:1px solid #ccc; padding:12px; width:420px; margin-top:16px;">
+    <h3>StackAI Chat</h3>
+    <div id="chat-messages" style="height:200px; overflow:auto; border:1px solid #eee; padding:8px; background:#fafafa;"></div>
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <input id="chat-input" type="text" placeholder="Ask the AI..." style="flex:1; padding:6px;" />
+      <button id="chat-send">Send</button>
+    </div>
+    <div id="chat-status" style="font-size:12px; color:#666; margin-top:6px;"></div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+</body>
+</html>
