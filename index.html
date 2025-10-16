@@ -1,49 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stock Simulator</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/vendor/chartjs-chart-financial.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-  <!-- load financial plugin from /vendor/chartjs-chart-financial.min.js -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackFlow - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="index.js" defer></script>
 </head>
 <body>
-  <h1>StackFlow</h1>
+    <header class="navbar">
+        <div class="logo">StackFlow</div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#" id="home-link">Home</a></li>
+                <li><a href="#features" id="features-link">Features</a></li>
+                <li><a href="#about" id="about-link">About</a></li>
+                <li><a href="#contacts" id="contact-link">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <button id="login-btn" class="mover">Log In</button>
+            <button id="signup-btn">Sign Up</button>
+        </div>
+    </header>
 
-  <div id="container">
-    <div id="controls">
-      <p>Balance: $<span id="balance">10000</span></p>
-      <input type="text" id="symbol" placeholder="Enter stock symbol (AAPL)">
-  <button id="getStock">Get Price</button>
-  <button id="toggleCandle" style="margin-left:8px;">Try Candlestick</button>
-      <div id="stock-info"></div>
-      <div id="time-range">
-        <button data-range="1D">1D</button>
-        <button data-range="1M">1M</button>
-        <button data-range="1Y">1Y</button>
-        <button data-range="5Y">5Y</button>
-      </div>
-    </div>
+    <section class="hero">
+        <h1>Invest Smarter with StackFlow</h1>
+        <p>The next-generation AI-powered stock simulator designed to help you master the market.</p>
+        <div class="hero-buttons">
+            <button id="start-btn" class="mover"><a id="demolink" href="./app.html" style="text-decoration: none;">Try Demo</a></button>
+            <button id="learn-btn">Learn More</button>
+        </div>
+    </section>
 
-    <div id="chart-container" style="display:none; height:400px;">
-      <canvas id="stockChart"></canvas>
-    </div>
-  </div>
+    <section class="features" id="features">
+        <div class="feature-card" id="ai-advisor">
+            <h2>AI Advisor</h2>
+            <p>Real-time insights and guidance from an intelligent assistant.</p>
+        </div>
+        <div class="feature-card" id="market-simulation">
+            <h2>Live Market Simulation</h2>
+            <p>Experience realistic trading scenarios with live data updates.</p>
+        </div>
+        <div class="feature-card" id="performance-tracking">
+            <h2>Performance Tracking</h2>
+            <p>Analyze your growth and learn from your investment history.</p>
+        </div>
+    </section>
 
-  <!-- Simple StackAI chat panel -->
-  <div id="chat-panel" style="border:1px solid #ccc; padding:12px; width:420px; margin-top:16px;">
-    <h3>StackAI Chat</h3>
-    <div id="chat-messages" style="height:200px; overflow:auto; border:1px solid #eee; padding:8px; background:#fafafa;"></div>
-    <div style="margin-top:8px; display:flex; gap:8px;">
-      <input id="chat-input" type="text" placeholder="Ask the AI..." style="flex:1; padding:6px;" />
-      <button id="chat-send">Send</button>
-    </div>
-    <div id="chat-status" style="font-size:12px; color:#666; margin-top:6px;"></div>
-  </div>
+    <section class="about" id="about">
+        <h2>About StackFlow</h2><br>
+        <p class="aboutp">StackFlow is a stock simulator made by 15 year old, Owen Forloine in the hopes of 
+        helping others learn about the stock market in a fun and interactive way. It leverages AI to provide users with insights and guidance, making it easier to understand market trends and make informed decisions.
+        Owen and his colleague, Amir Mechkour hope to make StackFlow used by people of all ages
+        as a fun, interactive way to get handy with trading and buying/selling shares of stocks.
+        We believe finance is important, and everyone should have the chance to get comfortable with 
+        it without having to always use real money or pay for a simulator.</p>
+        </p>
+    </section>
+    <section class="imagebar">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnKMyr0-GObSqkJAbg72jD3wr6imDKyX1n7g&s">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOw9RfN493Ch7nR7P6NpsJqCj_jNskjqKt-Q&s">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQKtUxuZstQy_KbE63cHf85xBkUQKFqDeMBYw&s">
+    </section>
+    <section class="contacts" id="contacts">
+      <h2>Contact Us</h2>
+      <p class="aboutp">Have questions or feedback? We'd love to hear from you! Reach out to us at 
+      <a href="mailto:johnklewisss@gmail.com">Owen Forloine</a> or
+      <a href="mailto:amirmechkour@gmail.com">Amir Mechkour</a>
+      </p>
+    </section>
 
-  <script type="module" src="index.js"></script>
+    <footer>
+        <p>© 2025 StackFlow. All rights reserved.</p>
+    </footer>
+    <script>
+        // Redirect to main app when auth buttons or start button are clicked
+        document.addEventListener('DOMContentLoaded', function () {
+            const goToApp = () => { window.location.href = '/index.html' }
+            const login = document.getElementById('login-btn')
+            const signup = document.getElementById('signup-btn')
+            const start = document.getElementById('start-btn')
+            if (login) login.addEventListener('click', goToApp)
+            if (signup) signup.addEventListener('click', goToApp)
+            if (start) start.addEventListener('click', goToApp)
+        })
+    </script>
 </body>
 </html>

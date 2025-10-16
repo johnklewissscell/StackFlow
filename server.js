@@ -1,31 +1,54 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 console.log('server.js executing...');
+
+process.on('uncaughtException', (err) => {
+  console.error('uncaughtException:', err && err.stack ? err.stack : err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('unhandledRejection:', reason && reason.stack ? reason.stack : reason);
+});
 
 const app = express();
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = path.dirname(_filename);
 
-// Log incoming requests for debugging
 app.use((req, res, next) => {
   console.log(new Date().toISOString(), req.method, req.url);
   next();
 });
 
-app.use(express.static(_dirname));
-// Serve a local 'vendor' folder under /vendor so you can drop third-party scripts there
+// Early root handler: explicitly serve index.html for '/' before any static middleware
+app.get('/', (req, res) => {
+  console.log('early root handler invoked for', req.originalUrl);
+  try {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    return res.sendFile(path.join(_dirname, 'index.html'), (err) => {
+      if (err) {
+        console.error('early root sendFile error', err);
+        if (!res.headersSent) res.status(500).send('server error');
+      }
+    });
+  } catch (e) {
+    console.error('early root handler failed', e);
+    return res.status(500).send('server error');
+  }
+});
+
+// Serve static files and use index.html as the default index for '/'
+app.use(express.static(_dirname, { index: 'index.html' }));
 app.use('/vendor', express.static(path.join(_dirname, 'vendor')));
-// Also expose node_modules under /vendor/node_modules if needed
 app.use('/vendor/node_modules', express.static(path.join(_dirname, 'node_modules')));
 
-// Diagnostic route: serve the financial plugin directly and log path existence
 app.get('/vendor_debug/financial', (req, res) => {
   try {
     const pluginPath = path.join(_dirname, 'node_modules', 'chartjs-chart-financial', 'dist', 'chartjs-chart-financial.min.js');
     console.log('debug: pluginPath =', pluginPath);
-    // Check existence
     import('fs').then(fs => {
       const exists = fs.existsSync(pluginPath);
       console.log('debug: exists =', exists);
@@ -41,7 +64,6 @@ app.get('/vendor_debug/financial', (req, res) => {
   }
 });
 
-// Simple proxy endpoint to fetch normalized candlestick data
 app.get('/api/stock', async (req, res) => {
   const symbol = (req.query.symbol || '').toUpperCase();
   const range = req.query.range || '1M';
@@ -85,6 +107,20 @@ app.get('/api/stock', async (req, res) => {
     res.status(500).json({ error: 'server_error' });
   }
 });
+
+// Fallback root handler placed late to guarantee '/' returns index.html in all cases
+app.get('/', (req, res) => {
+  console.log('fallback root handler invoked for', req.originalUrl)
+  try {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    res.set('Pragma', 'no-cache')
+    res.set('Expires', '0')
+    return res.sendFile(path.join(_dirname, 'index.html'))
+  } catch (e) {
+    console.error('fallback root send failed', e)
+    return res.status(500).send('server error')
+  }
+})
 
 app.listen(3000, () => {
   console.log("Server running at http://localhost:3000");
@@ -153,7 +189,8 @@ app.post('/api/stackai', async (req, res) => {
           proc.stdin.end();
 
           const result = await new Promise(resolve => {
-            const timeoutMs = 15_000;
+            // Allow more time for a local model to initialize on first run (may download weights)
+            const timeoutMs = 120_000; // 120s
             const timer = setTimeout(() => {
               try { proc.kill(); } catch (e) {}
               resolve({ error: 'timeout', stderr });

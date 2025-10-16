@@ -14,6 +14,14 @@ try:
 except Exception as e:
     chatbot_available = False
     _import_err = traceback.format_exc()
+    # log import error to stderr for server-side debugging
+    try:
+        sys.stderr.write('CHATBOT_IMPORT_ERROR_START\n')
+        sys.stderr.write(_import_err + '\n')
+        sys.stderr.write('CHATBOT_IMPORT_ERROR_END\n')
+        sys.stderr.flush()
+    except Exception:
+        pass
 
 def fallback_response(prompt: str) -> str:
     # A tiny deterministic fallback so the web UI still works without heavy deps
