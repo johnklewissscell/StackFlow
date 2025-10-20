@@ -6,7 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
   window.location.href = '/app.html'
   }
 
-  ['login-btn', 'signup-btn', 'start-btn'].forEach(id => {
-    const el = document.getElementById(id)
-    if (el) el.addEventListener('click', goToApp)
-  })});
+  function goToLogin(e) {
+    try { sessionStorage.setItem('fromHomepage', '1') } catch (e) {}
+    // navigate to the login page
+    window.location.href = '/login.html'
+  }
+
+  function goToSignup(e) {
+    try { sessionStorage.setItem('fromHomepage', '1') } catch (e) {}
+    // navigate to the signup page
+    window.location.href = '/signup.html'
+  }
+
+  document.getElementById('login-btn').addEventListener('click', goToLogin);
+  document.getElementById('signup-btn').addEventListener('click', goToSignup);
+  document.getElementById('start-btn').addEventListener('click', goToApp);
+});

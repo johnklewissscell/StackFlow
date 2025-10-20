@@ -61,7 +61,7 @@ body {
     transition: color 0.3s ease;
     background-color: #fff;
     padding: 20px;
-    line-height: 30px;
+    line-height: 50px;
 }
 
 .contacts a {
@@ -120,6 +120,8 @@ body {
     justify-content: center;
     padding-top: 6rem;
     text-align: center;
+    padding-top: 120px;
+    padding-bottom: 20px;
 }
 
 .hero h1 {

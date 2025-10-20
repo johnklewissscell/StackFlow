@@ -6,12 +6,15 @@ let chart
 let currentSymbol = null
 let preferCandlestick = false
 
+console.log('application.js loaded')
+
 document.getElementById('getStock').addEventListener('click', async () => {
-  const symbol = document.getElementById('symbol').value.trim().toUpperCase()
-  if (!symbol) return
-  document.getElementById('stock-info').innerHTML = "Loading..."
-  let price = null
   try {
+    const symbol = document.getElementById('symbol').value.trim().toUpperCase()
+    if (!symbol) return
+    document.getElementById('stock-info').innerHTML = "Loading..."
+
+    let price = null
     const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=1M`)
     if (!resp.ok) {
       document.getElementById('stock-info').innerHTML = `No data for ${symbol}`
@@ -27,21 +30,26 @@ document.getElementById('getStock').addEventListener('click', async () => {
       document.getElementById('stock-info').innerHTML = `No data for ${symbol}`
       return
     }
+
+    currentSymbol = symbol
+    // prefer a human-friendly company name when the proxy returns one
+    const companyName = (typeof json.companyName === 'string' && json.companyName.trim()) ? json.companyName.trim() : symbol
+    document.getElementById('stock-info').innerHTML = `
+      <h2>${companyName} <small style="font-weight:normal; font-size:0.8em; color:#666">(${symbol})</small></h2>
+      <p>Current Price: $<span id="current-price">${price.toFixed(2)}</span> <small id="last-updated" style="color:#666;font-size:0.85em">(updated just now)</small></p>
+      <button id="buy">Buy</button>
+      <button id="sell">Sell</button>
+    `
+    document.getElementById('buy').onclick = () => trade('buy', price)
+    document.getElementById('sell').onclick = () => trade('sell', price)
+    updateChart(symbol, "1M")
   } catch (err) {
     console.error('price fetch error', err)
-    document.getElementById('stock-info').innerHTML = `No data for ${symbol}`
+    // show error to user in the UI so it's obvious why Loading... remains
+    const infoEl = document.getElementById('stock-info')
+    if (infoEl) infoEl.innerHTML = `<p style="color:red">Error fetching data: ${String(err && err.message ? err.message : err)}</p>`
     return
   }
-  currentSymbol = symbol
-  document.getElementById('stock-info').innerHTML = `
-    <h2>${symbol}</h2>
-    <p>Current Price: $${price.toFixed(2)}</p>
-    <button id="buy">Buy</button>
-    <button id="sell">Sell</button>
-  `
-  document.getElementById('buy').onclick = () => trade('buy', price)
-  document.getElementById('sell').onclick = () => trade('sell', price)
-  updateChart(symbol, "1M")
 })
 
 document.getElementById('toggleCandle').addEventListener('click', () => {
@@ -451,6 +459,20 @@ function createPortfolio(name = "New Portfolio", balance = 10000) {
       <td><button class="remove-stock">✖</button></td>
     `
     row.querySelector('.remove-stock').addEventListener('click', () => {
+      try {
+        // Parse Total Cost and Gain/Loss from the row cells and refund to portfolio balance
+        const totalCostText = row.children[3].innerText // e.g. "$1,234.56"
+        const gainText = row.children[5].innerText // e.g. "+$12.34" or "-$12.34"
+        const totalCostNum = parseCurrency(totalCostText)
+        const gainNum = parseCurrency(gainText)
+        const refund = totalCostNum + gainNum
+        // Update portfolio balance
+        const currentBal = parseCurrency(balanceEl.innerText)
+        const newBal = currentBal + refund
+        balanceEl.textContent = newBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      } catch (e) {
+        console.error('error while removing stock and refunding balance', e)
+      }
       row.remove()
     })
     tbody.appendChild(row)
@@ -464,3 +486,109 @@ addPortfolioBtn.addEventListener('click', () => {
   const name = prompt("Enter your portfolio name:")
   if (name) createPortfolio(name)
 })
+
+// --- Price polling & portfolio updates ---
+async function getLatestPrice(symbol) {
+  try {
+    const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=1D`)
+    if (!resp.ok) return null
+    const j = await resp.json()
+    if (!j || !j.candles || j.candles.length === 0) return null
+    const last = j.candles[j.candles.length - 1]
+    return { price: last.c, t: last.t }
+  } catch (e) {
+    console.error('getLatestPrice error', e)
+    return null
+  }
+}
+
+function updatePortfolioRowMarket(row, latestPrice) {
+  try {
+    const shares = parseFloat(row.children[1].innerText) || 0
+    const totalCost = parseCurrency(row.children[3].innerText) || 0
+    const marketValue = shares * latestPrice
+    const gain = marketValue - totalCost
+    const percentGain = totalCost ? (gain / totalCost) * 100 : 0
+    row.children[4].innerText = `$${marketValue.toFixed(2)}`
+    row.children[5].innerText = `${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}`
+    row.children[6].innerText = `${percentGain.toFixed(2)}%`
+  } catch (e) {
+    console.error('updatePortfolioRowMarket error', e)
+  }
+}
+
+async function refreshAllPrices() {
+  try {
+    const symbols = new Set()
+    if (currentSymbol) symbols.add(currentSymbol)
+    document.querySelectorAll('.stock-table tbody tr').forEach(r => {
+      const t = (r.children[0] && r.children[0].innerText) || ''
+      if (t) symbols.add(t.trim().toUpperCase())
+    })
+
+    if (!symbols.size) return
+
+    const entries = Array.from(symbols)
+    const promises = entries.map(s => getLatestPrice(s).then(res => ({ s, res })))
+    const results = await Promise.all(promises)
+
+    results.forEach(({ s, res }) => {
+      if (!res || typeof res.price !== 'number') return
+      const latestPrice = res.price
+      // Update stock-info if matching currentSymbol
+      if (currentSymbol && s === currentSymbol) {
+        const cp = document.getElementById('current-price')
+        if (cp) cp.innerText = latestPrice.toFixed(2)
+        const lu = document.getElementById('last-updated')
+        if (lu) {
+          try { const d = new Date(res.t); lu.innerText = `(updated ${d.toLocaleTimeString()})` } catch(e) { lu.innerText = '(updated)'}
+        }
+      }
+
+      // Update all portfolio rows with this ticker
+      document.querySelectorAll('.stock-table tbody tr').forEach(row => {
+        const t = (row.children[0] && row.children[0].innerText) || ''
+        if (t && t.trim().toUpperCase() === s) updatePortfolioRowMarket(row, latestPrice)
+      })
+    })
+  } catch (e) {
+    console.error('refreshAllPrices error', e)
+  }
+}
+
+// start/stop polling every 15s controlled by a toggle in the UI
+const PRICE_POLL_INTERVAL_MS = 15 * 1000
+let _pricePollIntervalId = null
+
+function startAutoRefresh() {
+  if (_pricePollIntervalId) return
+  _pricePollIntervalId = setInterval(refreshAllPrices, PRICE_POLL_INTERVAL_MS)
+  // run immediately once when starting
+  refreshAllPrices().catch(() => {})
+}
+
+function stopAutoRefresh() {
+  if (!_pricePollIntervalId) return
+  clearInterval(_pricePollIntervalId)
+  _pricePollIntervalId = null
+}
+
+// Wire the floating checkbox if present
+try {
+  const checkbox = document.getElementById('auto-refresh-checkbox')
+  if (checkbox) {
+    // restore state from localStorage
+    const saved = localStorage.getItem('autoRefresh')
+    const enabled = saved === '1' || saved === 'true'
+    checkbox.checked = enabled
+    if (enabled) startAutoRefresh()
+
+    checkbox.addEventListener('change', (e) => {
+      const on = !!e.target.checked
+      localStorage.setItem('autoRefresh', on ? '1' : '0')
+      if (on) startAutoRefresh(); else stopAutoRefresh()
+    })
+  }
+} catch (e) {
+  console.error('auto-refresh init failed', e)
+}

@@ -101,7 +101,38 @@ app.get('/api/stock', async (req, res) => {
       c: c[i] == null ? null : +c[i]
     })).filter(cndl => cndl.o != null && cndl.h != null && cndl.l != null && cndl.c != null);
 
-    res.json({ symbol, range, candles });
+    // attempt to pull a human-friendly company name from the chart metadata
+    let companyName = (result.meta && (result.meta.longName || result.meta.shortName || result.meta.instrumentName)) || symbol;
+
+    // If the chart metadata didn't provide a helpful name (it may be just the ticker),
+    // try a lightweight quote lookup to get longName/shortName.
+  if (!companyName || companyName.toUpperCase() === symbol.toUpperCase()) {
+      // local fallback map for very common tickers to avoid external lookup failures
+      const localMap = {
+        'AAPL': 'Apple Inc.',
+        'MSFT': 'Microsoft Corporation',
+        'GOOGL': 'Alphabet Inc.',
+        'GOOG': 'Alphabet Inc.',
+        'AMZN': 'Amazon.com, Inc.',
+        'TSLA': 'Tesla, Inc.'
+      };
+      if (localMap[symbol.toUpperCase()]) companyName = localMap[symbol.toUpperCase()];
+      try {
+        const qurl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
+        const qr = await fetch(qurl);
+        if (qr.ok) {
+          const qj = await qr.json();
+          const qres = qj && qj.quoteResponse && qj.quoteResponse.result && qj.quoteResponse.result[0];
+          if (qres) {
+            companyName = (qres.longName || qres.shortName || companyName) || symbol;
+          }
+        }
+      } catch (e) {
+        console.warn('company name lookup failed', e);
+      }
+    }
+
+    res.json({ symbol, range, candles, companyName });
   } catch (err) {
     console.error('proxy error', err);
     res.status(500).json({ error: 'server_error' });

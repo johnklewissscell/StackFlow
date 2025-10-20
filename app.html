@@ -15,7 +15,30 @@
     ></script>
   </head>
   <body>
-    <h1>StackFlow</h1>
+    <!-- Auto-refresh toggle (floating control) -->
+    <div id="auto-refresh-control" title="Toggle automatic price refresh every 15s" style="position:fixed;bottom:14px;right:14px;background:rgba(0,0,0,0.65);color:#fff;padding:8px 10px;border-radius:8px;z-index:1200;font-family:inherit;font-size:13px;">
+      <label style="cursor:pointer;display:flex;align-items:center;gap:8px;">
+        <input id="auto-refresh-checkbox" type="checkbox" style="width:16px;height:16px;" />
+        <span id="auto-refresh-label">Auto Refresh</span>
+      </label>
+    </div>
+
+    <script type="module" src="application.js"></script>
+        <header class="navbar">
+        <div class="logo" style="color: #fff;"><img style="width: auto; height: 60px;" src="Logo.png"></div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="index.html#" id="home-link">Home</a></li>
+                <li><a href="index.html#features" id="features-link">Features</a></li>
+                <li><a href="index.html#about" id="about-link">About</a></li>
+                <li><a href="index.html#contacts" id="contact-link">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <button onclick="window.location.href = 'login.html'" class="log" id="login-btn" class="mover">Log In</button>
+            <button onclick="window.location.href = 'signup.html'" class="log" id="signup-btn">Sign Up</button>
+        </div>
+    </header>
     <div id="toprow">
       <div id="container">
         <div id="controls">
