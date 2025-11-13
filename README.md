@@ -35,6 +35,8 @@ Try the site
 - Use the symbol input and "Get Price" to fetch price and chart data.
 - Use the chat panel to ask StackAI questions.
 
+  Another way to view the site is using stackflow-1.web.app
+
 Chat AI: options
 
 1) Use OpenAI (recommended for high quality)
