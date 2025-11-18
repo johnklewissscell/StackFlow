@@ -21,6 +21,11 @@ body {
 	padding-top: 20px;
 }
 
+.favicon-img {
+  height: 70px;
+  width: auto;
+}
+
 .logo {
 	font-size: 24px;
 	font-family: "Inter", sans-serif;
@@ -91,7 +96,7 @@ main {
 	justify-content: center;
 	align-items: center;
 	flex-direction: column;
-	background-color: #fff;
+	background-color: #bac0c2;
 	border-radius: 15px;
 	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
 	width: 400px;

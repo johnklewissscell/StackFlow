@@ -4,6 +4,14 @@
     "default": "stackflow-1",
     "stackflow": "stackflow-1"
   },
-  "targets": {},
+  "targets": {
+    "stackflow-1": {
+      "hosting": {
+        "stackflow": [
+          "stackflow-1"
+        ]
+      }
+    }
+  },
   "etags": {}
 }

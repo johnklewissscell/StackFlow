@@ -1,0 +1,14 @@
+{
+  "name": "stackflow-functions",
+  "description": "Cloud Functions for StackFlow",
+  "type": "module",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^5.0.0",
+    "express": "^5.1.0",
+    "cors": "^2.8.5"
+  }
+}

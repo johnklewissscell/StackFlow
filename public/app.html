@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://s3.tradingview.com; connect-src 'self' https://query1.finance.yahoo.com;">
     <title>StackFlow - Stock Simulator</title>
     <link rel="stylesheet" href="/publicstyles/application.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,9 +24,72 @@
       </label>
     </div>
 
+    <!-- Welcome Banner (shown when logged in) -->
+    <div id="welcome-banner" style="display: none; margin-top: 30px; margin-bottom: 20px;">
+      <div style="background: linear-gradient(135deg, #203a43 0%, #2c5364 100%); border-radius: 12px; padding: 25px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15); max-width: 1200px; margin: 0 auto;">
+        <h2 style="margin: 0 0 8px 0; color: #00b4d8; font-size: 28px;">Welcome back, <span id="welcome-username"></span>! 👋</h2>
+        <p style="margin: 0; color: #bac0c2; font-size: 15px;">Ready to manage your portfolio? Check out your stocks and chat with StackAI for insights.</p>
+      </div>
+    </div>
+
     <script type="module" src="/publicscripts/application.js"></script>
+    <script>
+      // Initialize authentication UI
+      function initAuthUI() {
+        const currentUser = sessionStorage.getItem("currentUser");
+        const authSection = document.getElementById("auth-section");
+        const userMenu = document.getElementById("user-menu");
+        const welcomeBanner = document.getElementById("welcome-banner");
+        const navLinks = document.querySelector(".nav-links");
+        
+        if (currentUser) {
+          // User is logged in
+          authSection.style.display = "none";
+          userMenu.style.display = "flex";
+          welcomeBanner.style.display = "block";
+          navLinks.style.display = "none";
+          document.getElementById("user-greeting").textContent = "👤 " + currentUser;
+          document.getElementById("welcome-username").textContent = currentUser;
+        } else {
+          // User is not logged in
+          authSection.style.display = "flex";
+          userMenu.style.display = "none";
+          welcomeBanner.style.display = "none";
+          navLinks.style.display = "flex";
+        }
+      }
+
+      function signOut() {
+        sessionStorage.removeItem("currentUser");
+        window.location.href = "/login.html";
+      }
+
+      window.addEventListener("load", () => {
+  const welcomeBanner = document.getElementById("welcome-banner");
+  const currentUser = sessionStorage.getItem("currentUser");
+
+  // Key is per-user so different users have independent state
+  const bannerKey = `hasSeenBanner_${currentUser}`;
+
+  const hasSeenBanner = sessionStorage.getItem(bannerKey);
+
+  if (welcomeBanner) {
+    if (!hasSeenBanner) {
+      // First time this user logged in during this session
+      welcomeBanner.style.display = "block";
+      sessionStorage.setItem(bannerKey, "true");
+    } else {
+      welcomeBanner.style.display = "none";
+    }
+  }
+});
+
+
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", initAuthUI);
+    </script>
         <header class="navbar">
-        <div class="logo" style="color: #fff;"><img style="width: auto; height: 60px;" src="favicon.ico"></div>
+        <div class="logo" style="color: #fff;"><img style="width: auto; height: 60px;" src="/favicon.ico"></div>
         <nav>
             <ul class="nav-links">
                 <li><a href="index.html#" id="home-link">Home</a></li>
@@ -34,9 +98,13 @@
                 <li><a href="index.html#contacts" id="contact-link">Contact</a></li>
             </ul>
         </nav>
-        <div class="auth-buttons">
+        <div class="auth-buttons" id="auth-section">
             <button onclick="window.location.href = 'login.html'" class="log" id="login-btn" class="mover">Log In</button>
             <button onclick="window.location.href = 'signup.html'" class="log" id="signup-btn">Sign Up</button>
+        </div>
+        <div id="user-menu" style="display: none; display: flex; align-items: center; gap: 15px;">
+            <span id="user-greeting" style="color: #fff; font-weight: 500;"></span>
+            <button onclick="signOut()" class="log" style="background: #ff6b6b; padding: 0.6rem 1.2rem;">Sign Out</button>
         </div>
     </header>
     <div id="toprow">
@@ -47,18 +115,20 @@
             id="symbol"
             placeholder="Enter stock symbol (AAPL)"
           /><br />
-          <button id="getStock">Get Price</button>
-          <button id="toggleCandle" style="margin-left: 8px">
+          <div id="controls-btns">
+          <button id="getStock" class="specialbutton">Get Price</button>
+          <button id="toggleCandle" class="specialbutton style="margin-left: 8px;">
             Try Candlestick
           </button>
+          </div>
 
           <div id="stock-info"></div>
 
           <div id="time-range">
-            <button data-range="1D">1D</button>
-            <button data-range="1M">1M</button>
-            <button data-range="1Y">1Y</button>
-            <button data-range="5Y">5Y</button>
+            <button class="specialbutton data-range="1D">1D</button>
+            <button class="specialbutton" data-range="1M">1M</button>
+            <button class="specialbutton" data-range="1Y">1Y</button>
+            <button class="specialbutton" data-range="5Y">5Y</button>
           </div>
         </div>
       </div>
@@ -90,7 +160,7 @@
             placeholder="Ask the AI..."
             style="flex: 1; padding: 6px"
           />
-          <button id="chat-send">Send</button>
+          <button class="specialbutton" id="chat-send">Send</button>
         </div>
         <div
           id="chat-status"
@@ -115,7 +185,7 @@
         <button
           id="add-portfolio"
           style="
-            background: #0078ff;
+            background: #203a43;
             color: #fff;
             border: none;
             padding: 6px 12px;
@@ -128,6 +198,6 @@
       <div id="portfolios"></div>
     </div>
 
-    <script type="module" src="application.js"></script>
+    <script type="module" src="/publicscripts/application.js"></script>
   </body>
 </html>

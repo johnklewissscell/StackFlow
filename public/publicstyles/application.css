@@ -74,6 +74,28 @@
   transform: scale(1.05);
 }
 
+#user-menu {
+  margin-right: 63px;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+
+#user-menu button {
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+#user-menu button:hover {
+  transform: scale(1.05);
+  background: #d93636;
+}
+
 /* ===== GENERAL STYLING ===== */
 body {
   font-family: 'Inter', sans-serif;
@@ -101,7 +123,7 @@ body {
 
 /* ===== CONTROL PANEL ===== */
 #controls {
-  background: #ffffff;
+  background: #bac0c2;
   color: #111;
   padding: 25px;
   border-radius: 12px;
@@ -127,13 +149,46 @@ body {
   font-size: 15px;
 }
 
+.specialbutton, #buy, #sell {
+  border: none;
+  border-radius: 10px;
+  width: 100px;
+  height: 40px;
+  background-color: #203a43;
+  color: #fff; 
+  transition: all 0.2s ease-in-out;
+}
+
+.specialbutton:hover, #buy:hover, #sell:hover {
+  background-color: #445d65;
+  cursor: pointer;
+  transform: scale(1.05);
+}
+
+.specialbutton:active, #buy:active, #sell:active {
+  background-color: #74878e;
+}
+
 #controls button {
   margin-top: 5px;
+  position: relative;
+}
+
+#time-range button {
+  margin-top: 30px;
+}
+
+#controls-btns {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
 }
 
 /* ===== CHART AREA ===== */
 #chart-container {
-  background: #fff;
+  background: #bac0c2;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
@@ -147,7 +202,7 @@ body {
 
 /* ===== CHAT PANEL ===== */
 #chat-panel {
-  background: #ffffff;
+  background: #bac0c2;
   border-radius: 12px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
   width: 420px;
@@ -166,7 +221,7 @@ body {
 
 #chat-panel h3 {
   margin-top: 0;
-  color: #0078ff;
+  color: #203a43;
   font-weight: 600;
 }
 
@@ -187,7 +242,7 @@ body {
 }
 
 #chat-panel button {
-  background: #0078ff;
+  background: #203a43;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -197,12 +252,12 @@ body {
 }
 
 #chat-panel button:hover {
-  background: #005fcc;
+  background: #445d65;
 }
 
 /* ===== PORTFOLIO SECTION ===== */
 #portfolio-section {
-  background: #fff;
+  background: #bac0c2;
   border-radius: 12px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
   max-width: 1000px;
@@ -215,11 +270,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #0078ff;
+  color: #203a43;
 }
 
 #portfolio-section button {
-  background: #0078ff;
+  background: #203a43;
   color: #fff;
   border: none;
   padding: 8px 14px;
@@ -229,11 +284,11 @@ body {
 }
 
 #portfolio-section button:hover {
-  background: #005fcc;
+  background: #485e65;
 }
 
 .portfolio {
-  background: #f9fafc;
+  background: #bac0c2;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 15px;

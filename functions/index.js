@@ -1,29 +1,18 @@
 import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
+import cors from "cors";
+import { onRequest } from "firebase-functions/v2/https";
 
 const app = express();
 
-// Must come BEFORE any POST routes!
+// Middleware
+app.use(cors({ origin: true }));
 app.use(express.json());
-
-// Get directory path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // In-memory user storage for demo
 const users = {};
 
-// Express static files from public folder
-app.use(express.static(path.join(__dirname, "public")));
-
-// Serve index.html at root
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
 // --- STOCK API ---
-app.get('/api/stock', async (req, res) => {
+app.get('/stock', async (req, res) => {
   const symbol = (req.query.symbol || '').toUpperCase();
   const range = req.query.range || '1M';
   if (!symbol) return res.status(400).json({ error: 'symbol query required' });
@@ -80,13 +69,12 @@ app.get('/api/stock', async (req, res) => {
 });
 
 // --- SIGNUP ---
-app.post("/signup", async (req, res) => {
+app.post("/signup", (req, res) => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password)
     return res.status(400).json({ error: "All fields required" });
 
-  // Simple in-memory storage
   if (users[username] || Object.values(users).find(u => u.email === email)) {
     return res.status(400).json({ error: "User already exists" });
   }
@@ -96,7 +84,7 @@ app.post("/signup", async (req, res) => {
 });
 
 // --- LOGIN ---
-app.post("/login", async (req, res) => {
+app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password)
@@ -110,8 +98,5 @@ app.post("/login", async (req, res) => {
   res.json({ success: true, redirect: "/app.html" });
 });
 
-// Start server
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+// Export the Express app as a Cloud Function
+export const api = onRequest(app);

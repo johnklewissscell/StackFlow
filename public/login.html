@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:3000; style-src 'self' 'unsafe-inline';">
   <title>StackFlow - Log In</title>
   <link rel="stylesheet" href="/publicstyles/login.css">
-  <script src="/publicscripts/login.js" defer></script>
 </head>
 <body>
   <header class="navbar">
-    <div class="logo"><img src="favicon.ico" alt="StackFlow Logo" style="height: 60px;"></div>
+    <div class="logo">
+  <img src="/favicon.ico" alt="StackFlow Logo" class="favicon-img" style="height: 40px;">
+</div>
     <nav>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
@@ -27,8 +29,9 @@
   <main>
     <section class="login-section">
       <h2>Log In to StackFlow</h2>
-      <form id="login-form">
-        <label for="username">Username or Email:</label>
+
+      <form id="login-form" method="POST">
+        <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
 
         <label for="password">Password:</label>
@@ -36,8 +39,11 @@
 
         <button type="submit">Log In</button>
       </form>
+
       <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
     </section>
   </main>
+
+  <script type="module" src="/publicscripts/login.js"></script>
 </body>
 </html>

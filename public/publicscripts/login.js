@@ -1,25 +1,27 @@
-document.getElementById("login-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("login-form");
 
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  try {
-    const res = await fetch("/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-    const data = await res.json();
-
-    if (data.success) {
-      window.location.href = "/app.html"; // redirect to app
-    } else {
-      alert(data.error || "Login failed");
+    if (!username || !password) {
+      alert("Please fill in all fields");
+      return;
     }
-  } catch (err) {
-    console.error("Login fetch error:", err);
-    alert("Server error. Try again.");
-  }
+
+    // Get registered users from localStorage
+    const users = JSON.parse(localStorage.getItem("stackflow_users") || "{}");
+
+    // Check if user exists and password matches
+    if (users[username] && users[username].password === password) {
+      // Store username for the app page
+      sessionStorage.setItem("currentUser", username);
+      window.location.href = "/app.html";
+    } else {
+      alert("Invalid username or password");
+    }
+  });
 });
