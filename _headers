@@ -1,0 +1,8 @@
+/*
+  Content-Security-Policy: 
+    default-src 'self';
+    script-src 'self' https://cdn.jsdelivr.net;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src https://fonts.gstatic.com;
+    connect-src 'self' https://query1.finance.yahoo.com https://cors-anywhere.herokuapp.com;
+*/
