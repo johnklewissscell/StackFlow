@@ -3,60 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StackFlow - Stock Simulator</title>
 
-  <!-- ===== Content Security Policy ===== -->
+  <!-- Cloudflare Pages CSP (zero inline JS allowed) -->
   <meta http-equiv="Content-Security-Policy"
-        content="
-          default-src 'self';
-          script-src 'self' https://cdn.jsdelivr.net https://s3.tradingview.com 'nonce-STACKFLOW';
-          style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-          font-src 'self' https://fonts.gstatic.com;
-          connect-src 'self' https://query1.finance.yahoo.com https://cdn.jsdelivr.net;
-          img-src 'self' data:;
-          object-src 'none';
-        ">
+    content="
+      default-src 'self';
+      script-src 'self' https://cdn.jsdelivr.net https://s3.tradingview.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      connect-src 'self' https://query1.finance.yahoo.com https://cdn.jsdelivr.net;
+      img-src 'self' data:;
+      frame-src https://www.tradingview.com;
+    "
+  >
 
-  <!-- Fonts -->
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <title>StackFlow - Stock Simulator</title>
 
   <!-- Styles -->
   <link rel="stylesheet" href="/publicstyles/application.css" />
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
 
-  <!-- External libs -->
-  <script nonce="STACKFLOW" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script nonce="STACKFLOW" src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-  <script nonce="STACKFLOW" src="/publicscripts/chartjs-chart-financial.min.js"></script>
-  <script nonce="STACKFLOW" src="https://s3.tradingview.com/tv.js"></script>
+  <!-- External JS (CSP-approved) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/publicscripts/chartjs-chart-financial.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://s3.tradingview.com/tv.js"></script>
 
-  <!-- App logic -->
-  <script nonce="STACKFLOW" type="module" src="/publicscripts/application.js"></script>
+  <!-- App script (no inline JS allowed) -->
+  <script src="/publicscripts/application.js" defer></script>
 </head>
 
-<body style="font-family: 'Inter', sans-serif;">
+<body>
 
-  <!-- Floating auto-refresh -->
-  <div id="auto-refresh-control" style="
-      position:fixed;bottom:14px;right:14px;background:rgba(0,0,0,0.65);
-      color:#fff;padding:8px 10px;border-radius:8px;z-index:1000;">
-      <label style="display:flex;gap:8px;">
-        <input id="auto-refresh-checkbox" type="checkbox">
-        <span>Auto Refresh</span>
-      </label>
+  <!-- Auto refresh toggle -->
+  <div id="auto-refresh-control"
+       title="Toggle automatic price refresh every 15s"
+       style="position:fixed;bottom:14px;right:14px;background:rgba(0,0,0,0.65);color:#fff;padding:8px 10px;border-radius:8px;z-index:1200;font-family:inherit;font-size:13px;">
+    <label style="cursor:pointer;display:flex;align-items:center;gap:8px;">
+      <input id="auto-refresh-checkbox" type="checkbox" style="width:16px;height:16px;" />
+      <span id="auto-refresh-label">Auto Refresh</span>
+    </label>
   </div>
 
-  <!-- Welcome banner -->
-  <div id="welcome-banner" style="display:none;margin:30px auto 20px;max-width:1200px;">
-    <div style="background:#2c5364;padding:25px;border-radius:12px;color:#fff;">
-      <h2>Welcome back, <span id="welcome-username"></span>!</h2>
-      <p>Check your stocks and chat with StackAI for insights.</p>
+  <!-- Welcome banner (shown only after login) -->
+  <div id="welcome-banner" style="display:none;margin-top:30px;margin-bottom:20px;">
+    <div style="background:linear-gradient(135deg,#203a43 0%,#2c5364 100%);border-radius:12px;padding:25px;box-shadow:0 4px 18px rgba(0,0,0,0.15);max-width:1200px;margin:0 auto;">
+      <h2 style="margin:0 0 8px;color:#00b4d8;font-size:28px;">
+        Welcome back, <span id="welcome-username"></span>! 👋
+      </h2>
+      <p style="margin:0;color:#bac0c2;font-size:15px;">
+        Ready to manage your portfolio? Check out your stocks and chat with StackAI.
+      </p>
     </div>
   </div>
 
-  <!-- Navbar -->
+  <!-- Navigation Bar -->
   <header class="navbar">
-    <div class="logo"><img src="/favicon.ico" style="height:60px"></div>
+    <div class="logo" style="color:#fff;">
+      <img src="/favicon.ico" style="width:auto;height:60px;">
+    </div>
 
     <nav>
       <ul class="nav-links">
@@ -67,46 +73,58 @@
       </ul>
     </nav>
 
-    <div id="auth-section" class="auth-buttons">
-      <button onclick="location.href='login.html'" class="log">Log In</button>
-      <button onclick="location.href='signup.html'" class="log">Sign Up</button>
+    <div class="auth-buttons" id="auth-section">
+      <button id="login-btn" class="log">Log In</button>
+      <button id="signup-btn" class="log">Sign Up</button>
     </div>
 
-    <div id="user-menu" style="display:none;gap:15px;">
-      <span id="user-greeting"></span>
-      <button id="logout-btn" class="log" style="background:#ff6b6b">Sign Out</button>
+    <div id="user-menu" style="display:none;align-items:center;gap:15px;">
+      <span id="user-greeting" style="color:#fff;font-weight:500;"></span>
+      <button id="signout-btn" class="log" style="background:#ff6b6b;padding:0.6rem 1.2rem;">
+        Sign Out
+      </button>
     </div>
   </header>
 
-  <div id="toprow" style="display:flex;gap:20px;flex-wrap:wrap;">
+  <!-- Main Layout -->
+  <div id="toprow">
 
     <!-- Stock Controls -->
-    <div id="controls" style="width:450px;">
-      <input id="symbol" placeholder="Enter stock symbol (AAPL)"><br>
+    <div id="container">
+      <div id="controls" style="width:450px;height:375px;">
+        <input type="text" id="symbol" placeholder="Enter stock symbol (AAPL)" />
 
-      <div style="margin-top:10px;">
-        <button id="getStock" class="specialbutton">Get Price</button>
-        <button id="toggleCandle" class="specialbutton" style="margin-left:8px;">Candlestick</button>
-      </div>
+        <div id="controls-btns" style="margin-top:10px;">
+          <button id="getStock" class="specialbutton">Get Price</button>
+          <button id="toggleCandle" class="specialbutton" style="margin-left:8px;">
+            Try Candlestick
+          </button>
+        </div>
 
-      <div id="stock-info" style="margin-top:10px;"></div>
+        <div id="stock-info"></div>
 
-      <div id="time-range" style="margin-top:10px;">
-        <button data-range="1D" class="specialbutton">1D</button>
-        <button data-range="1M" class="specialbutton">1M</button>
-        <button data-range="1Y" class="specialbutton">1Y</button>
-        <button data-range="5Y" class="specialbutton">5Y</button>
+        <div id="time-range" style="margin-top:10px;">
+          <button class="specialbutton" data-range="1D">1D</button>
+          <button class="specialbutton" data-range="1M">1M</button>
+          <button class="specialbutton" data-range="1Y">1Y</button>
+          <button class="specialbutton" data-range="5Y">5Y</button>
+        </div>
       </div>
     </div>
 
-    <!-- Chat -->
-    <div id="chat-panel" style="width:450px;border:1px solid #ccc;padding:12px;">
+    <!-- Chat Panel -->
+    <div id="chat-panel" style="border:1px solid #ccc;padding:12px;width:450px;height:400px;">
       <h3>StackAI Chat</h3>
-      <div id="chat-messages" style="height:200px;overflow:auto;background:#fafafa;"></div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <input id="chat-input" placeholder="Ask the AI..." style="flex:1;">
+
+      <div id="chat-messages"
+           style="height:200px;overflow:auto;border:1px solid #eee;padding:8px;background:#fafafa;">
+      </div>
+
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <input id="chat-input" type="text" placeholder="Ask the AI..." style="flex:1;padding:6px;" />
         <button id="chat-send" class="specialbutton">Send</button>
       </div>
+
       <div id="chat-status" style="font-size:12px;color:#666;margin-top:6px;"></div>
     </div>
 
@@ -114,14 +132,16 @@
     <div id="chart-container" style="display:none;height:400px;">
       <canvas id="stockChart"></canvas>
     </div>
-
   </div>
 
-  <!-- Portfolios -->
+  <!-- Portfolio Section -->
   <div id="portfolio-section" style="margin-top:40px;">
-    <h2 style="display:flex;justify-content:space-between;">
+    <h2 style="display:flex;justify-content:space-between;align-items:center;">
       Portfolios
-      <button id="add-portfolio" style="background:#203a43;color:#fff;padding:6px 12px;">+ New Portfolio</button>
+      <button id="add-portfolio"
+              style="background:#203a43;color:#fff;border:none;padding:6px 12px;border-radius:6px;">
+        + New Portfolio
+      </button>
     </h2>
 
     <div id="portfolios"></div>
