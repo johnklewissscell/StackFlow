@@ -31,7 +31,7 @@
   <script src="https://s3.tradingview.com/tv.js"></script>
 
   <!-- App script (no inline JS allowed) -->
-  <script src="/publicscripts/application.js" defer></script>
+  <script src="publicscripts/application.js" defer></script>
 </head>
 
 <body>
@@ -91,25 +91,30 @@
 
     <!-- Stock Controls -->
     <div id="container">
-      <div id="controls" style="width:450px;height:375px;">
-        <input type="text" id="symbol" placeholder="Enter stock symbol (AAPL)" />
+      <div id="controls" style="width: 450px; height: 375px;">
+  <input
+    type="text"
+    id="symbol"
+    placeholder="Enter stock symbol (AAPL)"
+  /><br />
+  
+  <div id="controls-btns">
+    <button id="getStock" class="specialbutton" type="button">Get Price</button>
+    <button id="toggleCandle" class="specialbutton" type="button" style="margin-left: 8px;">
+      Try Candlestick
+    </button>
+  </div>
 
-        <div id="controls-btns" style="margin-top:10px;">
-          <button id="getStock" class="specialbutton">Get Price</button>
-          <button id="toggleCandle" class="specialbutton" style="margin-left:8px;">
-            Try Candlestick
-          </button>
-        </div>
+  <div id="stock-info"></div>
 
-        <div id="stock-info"></div>
+  <div id="time-range">
+    <button class="specialbutton" data-range="1D" type="button">1D</button>
+    <button class="specialbutton" data-range="1M" type="button">1M</button>
+    <button class="specialbutton" data-range="1Y" type="button">1Y</button>
+    <button class="specialbutton" data-range="5Y" type="button">5Y</button>
+  </div>
+</div>
 
-        <div id="time-range" style="margin-top:10px;">
-          <button class="specialbutton" data-range="1D">1D</button>
-          <button class="specialbutton" data-range="1M">1M</button>
-          <button class="specialbutton" data-range="1Y">1Y</button>
-          <button class="specialbutton" data-range="5Y">5Y</button>
-        </div>
-      </div>
     </div>
 
     <!-- Chat Panel -->
