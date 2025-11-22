@@ -3,9 +3,12 @@
 //   getStockPrice(symbol) -> number | null
 //   getHistoricalData(symbol, range) -> { timestamps: number[], prices: number[] } | null
 
+// Proxy URL for CORS
+const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy to bypass restrictions
+
 async function fetchYahooChart(symbol, rangeParam, intervalParam) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${rangeParam}&interval=${intervalParam}`;
-  const resp = await fetch(url);
+  const resp = await fetch(proxyUrl + url); // Add proxyUrl to bypass CORS
   if (!resp.ok) throw new Error(`Network error: ${resp.status}`);
   const json = await resp.json();
   if (!json.chart || !json.chart.result) return null;
@@ -35,10 +38,10 @@ export async function getHistoricalData(symbol, range = '1M') {
 
 export async function getStockPrice(symbol) {
   try {
-    // Use 1D range to get latest intraday price if available
+    // Use 1D range to get the latest intraday price if available
     const data = await getHistoricalData(symbol, '1D');
     if (!data || !data.prices || data.prices.length === 0) {
-      // Fall back to 1M range
+      // Fall back to 1M range if no 1D data is available
       const fallback = await getHistoricalData(symbol, '1M');
       if (!fallback || !fallback.prices || fallback.prices.length === 0) return null;
       return fallback.prices[fallback.prices.length - 1];
