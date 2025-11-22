@@ -3,58 +3,181 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- === CONTENT SECURITY POLICY === -->
     <meta http-equiv="Content-Security-Policy"
-      content="style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-               font-src 'self' https://fonts.gstatic.com;
-               connect-src 'self' https://query1.finance.yahoo.com https://cdn.jsdelivr.net;">
+      content="
+        default-src 'self';
+        script-src 'self' https://cdn.jsdelivr.net https://s3.tradingview.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        connect-src 'self' https://query1.finance.yahoo.com https://cdn.jsdelivr.net;
+        img-src 'self' data:;
+        object-src 'none';
+      "
+    />
+
     <title>StackFlow - Stock Simulator</title>
+
+    <!-- Fonts -->
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    />
+
+    <!-- Local styles -->
     <link rel="stylesheet" href="/publicstyles/application.css" />
+
+    <!-- External libraries allowed by CSP -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/publicscripts/chartjs-chart-financial.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <!-- TradingView embeddable chart (used as an alternative reliable candlestick provider) -->
-    <script
-      type="text/javascript"
-      src="https://s3.tradingview.com/tv.js"
-    ></script>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+
+    <!-- Main app logic -->
+    <script type="module" src="/publicscripts/application.js" defer></script>
   </head>
-  <body>
-    <!-- Auto-refresh toggle (floating control) -->
-    <div id="auto-refresh-control" title="Toggle automatic price refresh every 15s" style="position:fixed;bottom:14px;right:14px;background:rgba(0,0,0,0.65);color:#fff;padding:8px 10px;border-radius:8px;z-index:1200;font-family:inherit;font-size:13px;">
+
+  <body style="font-family: 'Inter', sans-serif;">
+
+    <!-- Auto-refresh floating control -->
+    <div id="auto-refresh-control"
+      title="Toggle automatic price refresh every 15s"
+      style="position:fixed;bottom:14px;right:14px;
+             background:rgba(0,0,0,0.65);color:#fff;
+             padding:8px 10px;border-radius:8px;
+             z-index:1200;font-size:13px;">
       <label style="cursor:pointer;display:flex;align-items:center;gap:8px;">
-        <input id="auto-refresh-checkbox" type="checkbox" style="width:16px;height:16px;" />
+        <input id="auto-refresh-checkbox" type="checkbox"
+               style="width:16px;height:16px;" />
         <span id="auto-refresh-label">Auto Refresh</span>
       </label>
     </div>
 
-    <!-- Welcome Banner (shown when logged in) -->
-    <div id="welcome-banner" style="display: none; margin-top: 30px; margin-bottom: 20px;">
-      <div style="background: linear-gradient(135deg, #203a43 0%, #2c5364 100%); border-radius: 12px; padding: 25px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15); max-width: 1200px; margin: 0 auto;">
-        <h2 style="margin: 0 0 8px 0; color: #00b4d8; font-size: 28px;">Welcome back, <span id="welcome-username"></span>! 👋</h2>
-        <p style="margin: 0; color: #bac0c2; font-size: 15px;">Ready to manage your portfolio? Check out your stocks and chat with StackAI for insights.</p>
+    <!-- Welcome banner -->
+    <div id="welcome-banner" style="display:none; margin-top:30px; margin-bottom:20px;">
+      <div style="
+        background:linear-gradient(135deg,#203a43 0%,#2c5364 100%);
+        border-radius:12px;padding:25px;
+        box-shadow:0 4px 18px rgba(0,0,0,0.15);
+        max-width:1200px;margin:0 auto;">
+        <h2 style="margin:0 0 8px;color:#00b4d8;font-size:28px;">
+          Welcome back, <span id="welcome-username"></span>! 👋
+        </h2>
+        <p style="margin:0;color:#bac0c2;font-size:15px;">
+          Ready to manage your portfolio? Check your stocks and chat with StackAI for insights.
+        </p>
       </div>
     </div>
 
-    <script type="module" src="/publicscripts/application.js"></script>
+    <!-- Header -->
+    <header class="navbar">
+      <div class="logo" style="color:#fff;">
+        <img src="/favicon.ico" style="height:60px;" />
+      </div>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html#">Home</a></li>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#contacts">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="auth-buttons" id="auth-section">
+        <button onclick="window.location.href='login.html'" class="log">Log In</button>
+        <button onclick="window.location.href='signup.html'" class="log">Sign Up</button>
+      </div>
+
+      <div id="user-menu" style="display:none;align-items:center;gap:15px;">
+        <span id="user-greeting" style="color:#fff;font-weight:500;"></span>
+        <button onclick="signOut()" class="log" style="background:#ff6b6b;padding:0.6rem 1.2rem;">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <div id="toprow">
+      <div id="container">
+        <div id="controls" style="width:450px;height:375px;">
+
+          <input id="symbol" type="text"
+            placeholder="Enter stock symbol (AAPL)" /><br />
+
+          <div id="controls-btns">
+            <button id="getStock" class="specialbutton">Get Price</button>
+
+            <button id="toggleCandle" class="specialbutton" style="margin-left:8px;">
+              Try Candlestick
+            </button>
+          </div>
+
+          <div id="stock-info"></div>
+
+          <div id="time-range">
+            <button class="specialbutton" data-range="1D">1D</button>
+            <button class="specialbutton" data-range="1M">1M</button>
+            <button class="specialbutton" data-range="1Y">1Y</button>
+            <button class="specialbutton" data-range="5Y">5Y</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- StackAI Chat -->
+      <div id="chat-panel"
+        style="border:1px solid #ccc;padding:12px;width:450px;height:400px;">
+        <h3>StackAI Chat</h3>
+
+        <div id="chat-messages"
+          style="height:200px;overflow:auto;border:1px solid #eee;
+                 padding:8px;background:#fafafa;"></div>
+
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <input id="chat-input" type="text" placeholder="Ask the AI..."
+                 style="flex:1;padding:6px;" />
+          <button id="chat-send" class="specialbutton">Send</button>
+        </div>
+
+        <div id="chat-status"
+          style="font-size:12px;color:#666;margin-top:6px;"></div>
+      </div>
+
+      <div id="chart-container" style="display:none;height:400px;">
+        <canvas id="stockChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Portfolio Section -->
+    <div id="portfolio-section" style="margin-top:40px;">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;">
+        Portfolios
+        <button id="add-portfolio"
+          style="background:#203a43;color:#fff;border:none;
+                 padding:6px 12px;border-radius:6px;">
+          + New Portfolio
+        </button>
+      </h2>
+
+      <div id="portfolios"></div>
+    </div>
+
+    <!-- Session UI Logic -->
     <script>
-      // Initialize authentication UI
       function initAuthUI() {
         const currentUser = sessionStorage.getItem("currentUser");
         const authSection = document.getElementById("auth-section");
         const userMenu = document.getElementById("user-menu");
         const welcomeBanner = document.getElementById("welcome-banner");
         const navLinks = document.querySelector(".nav-links");
-        
+
         if (currentUser) {
-          // User is logged in
           authSection.style.display = "none";
           userMenu.style.display = "flex";
           welcomeBanner.style.display = "block";
           navLinks.style.display = "none";
+
           document.getElementById("user-greeting").textContent = "👤 " + currentUser;
           document.getElementById("welcome-username").textContent = currentUser;
         } else {
-          // User is not logged in
           authSection.style.display = "flex";
           userMenu.style.display = "none";
           welcomeBanner.style.display = "none";
@@ -68,139 +191,20 @@
       }
 
       window.addEventListener("load", () => {
-  const welcomeBanner = document.getElementById("welcome-banner");
-  const currentUser = sessionStorage.getItem("currentUser");
+        const currentUser = sessionStorage.getItem("currentUser");
+        const bannerKey = `hasSeenBanner_${currentUser}`;
+        const welcomeBanner = document.getElementById("welcome-banner");
 
-  // Key is per-user so different users have independent state
-  const bannerKey = `hasSeenBanner_${currentUser}`;
+        if (!sessionStorage.getItem(bannerKey)) {
+          welcomeBanner.style.display = "block";
+          sessionStorage.setItem(bannerKey, "true");
+        } else {
+          welcomeBanner.style.display = "none";
+        }
+      });
 
-  const hasSeenBanner = sessionStorage.getItem(bannerKey);
-
-  if (welcomeBanner) {
-    if (!hasSeenBanner) {
-      // First time this user logged in during this session
-      welcomeBanner.style.display = "block";
-      sessionStorage.setItem(bannerKey, "true");
-    } else {
-      welcomeBanner.style.display = "none";
-    }
-  }
-});
-
-
-      // Initialize on page load
       document.addEventListener("DOMContentLoaded", initAuthUI);
     </script>
-        <header class="navbar">
-        <div class="logo" style="color: #fff;"><img style="width: auto; height: 60px;" src="/favicon.ico"></div>
-        <nav>
-            <ul class="nav-links">
-                <li><a href="index.html#" id="home-link">Home</a></li>
-                <li><a href="index.html#features" id="features-link">Features</a></li>
-                <li><a href="index.html#about" id="about-link">About</a></li>
-                <li><a href="index.html#contacts" id="contact-link">Contact</a></li>
-            </ul>
-        </nav>
-        <div class="auth-buttons" id="auth-section">
-            <button onclick="window.location.href = 'login.html'" class="log" id="login-btn" class="mover">Log In</button>
-            <button onclick="window.location.href = 'signup.html'" class="log" id="signup-btn">Sign Up</button>
-        </div>
-        <div id="user-menu" style="display: none; display: flex; align-items: center; gap: 15px;">
-            <span id="user-greeting" style="color: #fff; font-weight: 500;"></span>
-            <button onclick="signOut()" class="log" style="background: #ff6b6b; padding: 0.6rem 1.2rem;">Sign Out</button>
-        </div>
-    </header>
-    <div id="toprow">
-      <div id="container">
-        <div id="controls" style="width: 450px; height: 375px;">
-          <input
-            type="text"
-            id="symbol"
-            placeholder="Enter stock symbol (AAPL)"
-          /><br />
-          <div id="controls-btns">
-          <button id="getStock" class="specialbutton">Get Price</button>
-          <button id="toggleCandle" class="specialbutton style="margin-left: 8px;">
-            Try Candlestick
-          </button>
-          </div>
 
-          <div id="stock-info"></div>
-
-          <div id="time-range">
-            <button class="specialbutton data-range="1D">1D</button>
-            <button class="specialbutton" data-range="1M">1M</button>
-            <button class="specialbutton" data-range="1Y">1Y</button>
-            <button class="specialbutton" data-range="5Y">5Y</button>
-          </div>
-        </div>
-      </div>
-      <!-- StackAI Chat -->
-      <div
-        id="chat-panel"
-        style="
-          border: 1px solid #ccc;
-          padding: 12px;
-          width: 450px;
-          height: 400px;
-        "
-      >
-        <h3>StackAI Chat</h3>
-        <div
-          id="chat-messages"
-          style="
-            height: 200px;
-            overflow: auto;
-            border: 1px solid #eee;
-            padding: 8px;
-            background: #fafafa;
-          "
-        ></div>
-        <div style="margin-top: 8px; display: flex; gap: 8px">
-          <input
-            id="chat-input"
-            type="text"
-            placeholder="Ask the AI..."
-            style="flex: 1; padding: 6px"
-          />
-          <button class="specialbutton" id="chat-send">Send</button>
-        </div>
-        <div
-          id="chat-status"
-          style="font-size: 12px; color: #666; margin-top: 6px"
-        ></div>
-      </div>
-      <div id="chart-container" style="display: none; height: 400px">
-        <canvas id="stockChart"></canvas>
-      </div>
-    </div>
-
-    <!-- === Portfolio Section === -->
-    <div id="portfolio-section" style="margin-top: 40px">
-      <h2
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        "
-      >
-        Portfolios
-        <button
-          id="add-portfolio"
-          style="
-            background: #203a43;
-            color: #fff;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-          "
-        >
-          + New Portfolio
-        </button>
-      </h2>
-      <div id="portfolios"></div>
-    </div>
-
-    <script type="module" src="/publicscripts/application.js"></script>
   </body>
 </html>
