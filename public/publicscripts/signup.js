@@ -1,3 +1,10 @@
+document.addEventListener('DOMContentLoaded', function () {
+            const login = document.getElementById('login-btn');
+            const signup = document.getElementById('signup-btn');
+            if (login) login.addEventListener('click', () => { window.location.href = '/login.html' });
+            if (signup) signup.addEventListener('click', () => { window.location.href = '/signup.html' });
+        });
+
 document.getElementById("signup-form").addEventListener("submit", async (e) => {
   e.preventDefault();
 

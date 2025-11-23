@@ -6,16 +6,25 @@
 
   <!-- Cloudflare Pages CSP (zero inline JS allowed) -->
   <meta http-equiv="Content-Security-Policy"
-    content="
-      default-src 'self';
-      script-src 'self' https://cdn.jsdelivr.net https://s3.tradingview.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com;
-      connect-src 'self' https://query1.finance.yahoo.com https://cdn.jsdelivr.net;
-      img-src 'self' data:;
-      frame-src https://www.tradingview.com;
-    "
-  >
+  content="
+    default-src 'self';
+    script-src 'self' https://cdn.jsdelivr.net https://s3.tradingview.com https://www.gstatic.com https://www.googleapis.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    connect-src 'self'
+      https://query1.finance.yahoo.com
+      https://cdn.jsdelivr.net
+      https://firestore.googleapis.com
+      https://firebasestorage.googleapis.com
+      https://us-central1-aiplatform.googleapis.com
+      https://vertexai.googleapis.com
+      https://firebasevertexai.googleapis.com
+      https://www.googleapis.com
+      https://www.gstatic.com;
+    img-src 'self' data: blob:;
+    frame-src https://www.tradingview.com;
+  "
+>
 
   <title>StackFlow - Stock Simulator</title>
 
@@ -36,14 +45,11 @@
 
 <body>
 
-  <!-- Auto refresh toggle -->
-  <div id="auto-refresh-control"
-       title="Toggle automatic price refresh every 15s"
-       style="position:fixed;bottom:14px;right:14px;background:rgba(0,0,0,0.65);color:#fff;padding:8px 10px;border-radius:8px;z-index:1200;font-family:inherit;font-size:13px;">
-    <label style="cursor:pointer;display:flex;align-items:center;gap:8px;">
-      <input id="auto-refresh-checkbox" type="checkbox" style="width:16px;height:16px;" />
-      <span id="auto-refresh-label">Auto Refresh</span>
-    </label>
+  <!-- Refresh Button -->
+  <div id="refresh-control"
+       title="Refresh stock price and portfolio values"
+       style="position:fixed;bottom:14px;right:14px;background:rgba(0,0,0,0.65);color:#fff;padding:8px 10px;border-radius:8px;z-index:1200;font-family:inherit;font-size:13px;cursor:pointer;">
+    🔄 Refresh Prices
   </div>
 
   <!-- Welcome banner (shown only after login) -->
@@ -92,44 +98,35 @@
     <!-- Stock Controls -->
     <div id="container">
       <div id="controls" style="width: 450px; height: 375px;">
-  <input
-    type="text"
-    id="symbol"
-    placeholder="Enter stock symbol (AAPL)"
-  /><br />
-  
-  <div id="controls-btns">
-    <button id="getStock" class="specialbutton" type="button">Get Price</button>
-    <button id="toggleCandle" class="specialbutton" type="button" style="margin-left: 8px;">
-      Try Candlestick
-    </button>
-  </div>
+        <input type="text" id="symbol" placeholder="Enter stock symbol (AAPL)" /><br />
+        <div id="controls-btns">
+          <button id="getStock" class="specialbutton" type="button">Get Price</button>
+          <button id="toggleCandle" class="specialbutton" type="button" style="margin-left: 8px;">
+            Try Candlestick
+          </button>
+        </div>
 
-  <div id="stock-info"></div>
+        <div id="stock-info"></div>
 
-  <div id="time-range">
-    <button class="specialbutton" data-range="1D" type="button">1D</button>
-    <button class="specialbutton" data-range="1M" type="button">1M</button>
-    <button class="specialbutton" data-range="1Y" type="button">1Y</button>
-    <button class="specialbutton" data-range="5Y" type="button">5Y</button>
-  </div>
-</div>
-
+        <div id="time-range">
+          <button class="specialbutton" data-range="1D" type="button">1D</button>
+          <button class="specialbutton" data-range="1M" type="button">1M</button>
+          <button class="specialbutton" data-range="1Y" type="button">1Y</button>
+          <button class="specialbutton" data-range="5Y" type="button">5Y</button>
+        </div>
+      </div>
     </div>
 
     <!-- Chat Panel -->
     <div id="chat-panel" style="border:1px solid #ccc;padding:12px;width:450px;height:400px;">
       <h3>StackAI Chat</h3>
-
       <div id="chat-messages"
            style="height:200px;overflow:auto;border:1px solid #eee;padding:8px;background:#fafafa;">
       </div>
-
       <div style="margin-top:8px;display:flex;gap:8px;">
         <input id="chat-input" type="text" placeholder="Ask the AI..." style="flex:1;padding:6px;" />
         <button id="chat-send" class="specialbutton">Send</button>
       </div>
-
       <div id="chat-status" style="font-size:12px;color:#666;margin-top:6px;"></div>
     </div>
 
@@ -152,5 +149,6 @@
     <div id="portfolios"></div>
   </div>
 
+  <script type="module" src="publicscripts/gemini.js"></script>
 </body>
 </html>
