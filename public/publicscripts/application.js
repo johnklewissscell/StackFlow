@@ -252,6 +252,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -----------------------------
+// Time Range Buttons
+// -----------------------------
+const timeRangeBtns = document.querySelectorAll('#time-range button');
+
+timeRangeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!currentSymbol) return alert('Please select a stock first.');
+    const range = btn.dataset.range; // e.g., '1D', '1M', '1Y', '5Y'
+    updateChart(currentSymbol, range);
+  });
+});
+
+
+  // -----------------------------
   // Chart Update
   // -----------------------------
   async function updateChart(symbol, range) {
