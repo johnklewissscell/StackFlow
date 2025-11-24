@@ -4,6 +4,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // -----------------------------
+  // Initial State
+  // -----------------------------
   let balance = 10000;
   const balanceEl = document.getElementById('balance');
   if (balanceEl) balanceEl.innerText = balance.toFixed(2);
@@ -15,26 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('application.js loaded');
 
   // -----------------------------
-  // Stock Fetch & Display
+  // Utility Functions
   // -----------------------------
-  async function fetchStockPrice(symbol) {
-    try {
-      const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=1M`);
-      if (!resp.ok) return null;
-      const json = await resp.json();
-      if (!json || !json.candles || json.candles.length === 0) return null;
-
-      const lastCandle = json.candles[json.candles.length - 1];
-      const companyName = json.companyName?.trim() || json.meta?.name?.trim() || symbol;
-
-      // CSP-safe local logo placeholder
-      const logoUrl = `/img/logos/${symbol.toLowerCase()}.png`;
-
-      return { price: lastCandle.c, name: companyName, logo: logoUrl };
-    } catch (e) {
-      console.error('fetchStockPrice error', e);
-      return null;
-    }
+  function parseCurrency(text) {
+    return parseFloat(String(text).replace(/[^0-9.-]+/g, '')) || 0;
   }
 
   function createLogoImg(url, alt, size = 24) {
@@ -49,14 +36,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -----------------------------
-  // Candlestick Toggle
+  // Fetch Stock Price
   // -----------------------------
-  const toggleBtn = document.getElementById('toggleCandle');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
-      preferCandlestick = true;
-      if (currentSymbol) updateChart(currentSymbol, '1M');
-    });
+  async function fetchStockPrice(symbol) {
+    try {
+      const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=1M`);
+      if (!resp.ok) return null;
+      const json = await resp.json();
+      if (!json?.candles?.length) return null;
+
+      const lastCandle = json.candles[json.candles.length - 1];
+      const companyName = json.companyName?.trim() || json.meta?.name?.trim() || symbol;
+
+      // CSP-safe local logo
+      const logoUrl = `/img/logos/${symbol.toLowerCase()}.png`;
+
+      return { price: lastCandle.c, name: companyName, logo: logoUrl };
+    } catch (e) {
+      console.error('fetchStockPrice error', e);
+      return null;
+    }
   }
 
   // -----------------------------
@@ -74,10 +73,26 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await fetchStockPrice(symbol);
       if (!data) return alert('No price data found for ' + symbol);
 
-      const priceEl = document.getElementById('current-price');
-      if (priceEl) priceEl.innerText = data.price.toFixed(2);
+      const priceEl = document.getElementById('stock-info');
+if (priceEl) {
+  priceEl.innerHTML = `
+    <strong style="font-size:20px;">${data.name}</strong><br>
+    Price: $${data.price.toFixed(2)}
+  `;
+}
 
       updateChart(symbol, '1M');
+    });
+  }
+
+  // -----------------------------
+  // Candlestick Toggle
+  // -----------------------------
+  const toggleBtn = document.getElementById('toggleCandle');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      preferCandlestick = true;
+      if (currentSymbol) updateChart(currentSymbol, '1M');
     });
   }
 
@@ -98,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (chatSend) {
+  if (chatSend && chatInput) {
     chatSend.addEventListener('click', () => {
       const text = chatInput.value.trim();
       if (!text) return;
@@ -106,9 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chatInput.value = "";
       if (typeof runGemini === 'function') runGemini(text);
     });
-  }
 
-  if (chatInput) {
     chatInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -118,35 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -----------------------------
-  // Time-range buttons
+  // Portfolio Management
   // -----------------------------
-  document.querySelectorAll('#time-range button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (currentSymbol) {
-        const stockInfo = document.getElementById('stock-info');
-        if (stockInfo) stockInfo.innerHTML = 'Loading chart...';
-        updateChart(currentSymbol, btn.dataset.range);
-      }
-    });
-  });
-
-  // -----------------------------
-  // Portfolio Functions
-  // -----------------------------
-  function parseCurrency(text) {
-    return parseFloat(String(text).replace(/[^0-9.-]+/g, '')) || 0;
-  }
-
-  function adjustPortfolioBalance(portEl, deltaAmount) {
-    const balEl = portEl.querySelector('.portfolio-balance');
-    let bal = parseCurrency(balEl.innerText);
-    bal += deltaAmount;
-    balEl.innerText = bal.toFixed(2);
-  }
+  const portfoliosDiv = document.getElementById('portfolios');
+  const addPortfolioBtn = document.getElementById('add-portfolio');
 
   function listPortfolios() {
-    const nodes = Array.from(document.querySelectorAll('.portfolio'));
-    return nodes.map((el, idx) => ({
+    return Array.from(document.querySelectorAll('.portfolio')).map((el, idx) => ({
       el,
       name: el.querySelector('.portfolio-name')?.innerText.trim() || `Portfolio ${idx + 1}`,
       idx: idx + 1
@@ -157,133 +148,141 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = listPortfolios();
     if (!list.length) { alert('No portfolios found. Create one first.'); return null; }
     let msg = 'Choose a portfolio number:\n';
-    list.forEach(p => { msg += `${p.idx}: ${p.name}\n`; });
+    list.forEach(p => msg += `${p.idx}: ${p.name}\n`);
     const pick = prompt(msg);
     if (!pick) return null;
     const num = parseInt(pick);
-    if (isNaN(num) || num < 1 || num > list.length) { alert('Invalid portfolio selection'); return null; }
+    if (isNaN(num) || num < 1 || num > list.length) { alert('Invalid selection'); return null; }
     return list[num - 1].el;
+  }
+
+  function adjustPortfolioBalance(portEl, deltaAmount) {
+    const balEl = portEl.querySelector('.portfolio-balance');
+    let bal = parseCurrency(balEl.innerText);
+    bal += deltaAmount;
+    balEl.innerText = bal.toFixed(2);
   }
 
   function updatePortfolioRow(portEl, symbol, price, deltaShares, logoUrl = null) {
     const tbody = portEl.querySelector('tbody');
     let row = Array.from(tbody.querySelectorAll('tr')).find(r => r.dataset.symbol === symbol);
+
     if (!row && deltaShares > 0) {
       const shares = deltaShares;
-      const costBasis = price;
-      const totalCost = shares * costBasis;
-      const marketValue = shares * price;
-      const gain = marketValue - totalCost;
-      const percentGain = totalCost ? (gain / totalCost) * 100 : 0;
+      const totalCost = shares * price;
+      const marketValue = totalCost;
+      const gain = 0;
+      const percentGain = 0;
 
       row = document.createElement('tr');
       row.dataset.symbol = symbol;
 
-      // Logo + Symbol cell
+      // Logo + symbol cell
       const symbolTd = document.createElement('td');
       symbolTd.style.display = 'flex';
       symbolTd.style.alignItems = 'center';
       symbolTd.style.gap = '4px';
-
-      const logoImg = createLogoImg(logoUrl || `/img/logos/${symbol.toLowerCase()}.png`, symbol, 24);
+      const logoImg = createLogoImg(logoUrl || `/img/logos/${symbol.toLowerCase()}.png`, symbol);
       symbolTd.appendChild(logoImg);
-
       const symText = document.createElement('span');
       symText.textContent = symbol;
       symbolTd.appendChild(symText);
-
       row.appendChild(symbolTd);
 
       // Other cells
-      const sharesTd = document.createElement('td');
-      sharesTd.textContent = shares;
-      row.appendChild(sharesTd);
+      ['shares','costBasis','totalCost','marketValue','gain','percent','portfolioPercent'].forEach((field, idx) => {
+        const td = document.createElement('td');
+        switch(idx) {
+          case 0: td.textContent = shares; break;
+          case 1: td.textContent = `$${price.toFixed(2)}`; break;
+          case 2: td.textContent = `$${totalCost.toFixed(2)}`; break;
+          case 3: td.textContent = `$${marketValue.toFixed(2)}`; break;
+          case 4: td.textContent = `$${gain.toFixed(2)}`; break;
+          case 5: td.textContent = `${percentGain.toFixed(2)}%`; break;
+          case 6: td.textContent = '—'; break;
+        }
+        row.appendChild(td);
+      });
 
-      const costTd = document.createElement('td');
-      costTd.textContent = `$${costBasis.toFixed(2)}`;
-      row.appendChild(costTd);
-
-      const totalCostTd = document.createElement('td');
-      totalCostTd.textContent = `$${totalCost.toFixed(2)}`;
-      row.appendChild(totalCostTd);
-
-      const marketValueTd = document.createElement('td');
-      marketValueTd.textContent = `$${marketValue.toFixed(2)}`;
-      row.appendChild(marketValueTd);
-
-      const gainTd = document.createElement('td');
-      gainTd.textContent = `${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}`;
-      row.appendChild(gainTd);
-
-      const percentTd = document.createElement('td');
-      percentTd.textContent = `${percentGain.toFixed(2)}%`;
-      row.appendChild(percentTd);
-
-      const portPercentTd = document.createElement('td');
-      portPercentTd.textContent = '—';
-      row.appendChild(portPercentTd);
-
+      // Action cell
       const actionTd = document.createElement('td');
       const removeBtn = document.createElement('button');
       removeBtn.classList.add('remove-stock');
       removeBtn.textContent = '✖';
       removeBtn.addEventListener('click', () => {
-        const shares = parseFloat(row.children[1].innerText) || 0;
-        const costBasis = parseCurrency(row.children[2].innerText) || 0;
-        const totalCost = shares * costBasis;
-        const marketValue = parseCurrency(row.children[4].innerText) || 0;
-        const gainLoss = marketValue - totalCost;
-        const refund = totalCost + gainLoss;
-
-        balance += refund;
-        if (balanceEl) balanceEl.innerText = balance.toFixed(2);
-
-        const portBalEl = portEl.querySelector('.portfolio-balance');
-        let portBal = parseCurrency(portBalEl.innerText);
-        portBal += refund;
-        portBalEl.innerText = portBal.toFixed(2);
-
+        balance += parseCurrency(row.children[3].innerText); // refund market value
+        if(balanceEl) balanceEl.innerText = balance.toFixed(2);
+        adjustPortfolioBalance(portEl, parseCurrency(row.children[3].innerText));
         row.remove();
       });
       actionTd.appendChild(removeBtn);
       row.appendChild(actionTd);
 
       tbody.appendChild(row);
-      return { sharesAdded: shares };
+      return;
     }
 
-    if (!row) return { sharesAdded: 0 };
+    if (row) {
+      const sharesCell = row.children[1];
+      const costBasisCell = row.children[2];
+      const totalCostCell = row.children[3];
 
-    // Update existing row
-    const sharesCell = row.children[1];
-    const costBasisCell = row.children[2];
-    const totalCostCell = row.children[3];
+      const existingShares = parseFloat(sharesCell.innerText) || 0;
+      const newShares = existingShares + deltaShares;
+      if (newShares < 0) return alert('Not enough shares');
 
-    const existingShares = parseFloat(sharesCell.innerText) || 0;
-    const existingCostBasis = parseCurrency(costBasisCell.innerText) || 0;
-    const existingTotalCost = existingShares * existingCostBasis;
+      const newTotalCost = newShares * price;
+      sharesCell.innerText = newShares;
+      costBasisCell.innerText = `$${price.toFixed(2)}`;
+      totalCostCell.innerText = `$${newTotalCost.toFixed(2)}`;
+    }
+  }
 
-    const newShares = existingShares + deltaShares;
-    if (newShares < 0) { alert('Not enough shares to sell'); return { sharesAdded: 0 }; }
+  function createPortfolio(name="New Portfolio", startingBalance=10000) {
+    if(!portfoliosDiv) return;
+    const port = document.createElement('div');
+    port.classList.add('portfolio');
+    port.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 contenteditable="true" class="portfolio-name">${name}</h3>
+        <button class="delete-portfolio">Delete</button>
+      </div>
+      <p>Balance: $<span class="portfolio-balance">${startingBalance.toFixed(2)}</span></p>
+      <button class="add-stock">Add Stock</button>
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>Ticker</th><th>Shares</th><th>Cost</th><th>Total</th>
+            <th>Market</th><th>Gain</th><th>%</th><th>Portfolio %</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
+    portfoliosDiv.appendChild(port);
 
-    let newTotalCost = existingTotalCost;
-    if (deltaShares > 0) newTotalCost = existingTotalCost + price * deltaShares;
-    else if (deltaShares < 0) newTotalCost = Math.max(0, existingTotalCost - existingCostBasis * Math.min(existingShares, Math.abs(deltaShares)));
+    port.querySelector('.delete-portfolio').addEventListener('click', () => port.remove());
+    port.querySelector('.add-stock').addEventListener('click', async () => {
+      const ticker = prompt("Stock symbol:")?.toUpperCase();
+      if(!ticker) return;
+      const shares = parseFloat(prompt("Shares:"));
+      if(isNaN(shares) || shares <=0) return alert("Invalid number");
+      let price = 0;
+      try {
+        const data = await fetchStockPrice(ticker);
+        if(data) price = data.price;
+      } catch {}
+      if(price <=0) price = parseFloat(prompt("Cost per share:"));
+      updatePortfolioRow(port, ticker, price, shares);
+      adjustPortfolioBalance(port, -shares*price);
+    });
+  }
 
-    const newCostBasis = newShares > 0 ? newTotalCost / newShares : 0;
-    const marketValue = newShares * price;
-    const gain = marketValue - newTotalCost;
-    const percentGain = newTotalCost ? (gain / newTotalCost) * 100 : 0;
-
-    sharesCell.innerText = newShares;
-    costBasisCell.innerText = `$${newCostBasis.toFixed(2)}`;
-    totalCostCell.innerText = `$${newTotalCost.toFixed(2)}`;
-    row.children[4].innerText = `$${marketValue.toFixed(2)}`;
-    row.children[5].innerText = `${gain >= 0 ? '+' : ''}$${gain.toFixed(2)}`;
-    row.children[6].innerText = `${percentGain.toFixed(2)}%`;
-
-    if (newShares === 0) row.remove();
-    return { sharesAdded: deltaShares };
+  if(addPortfolioBtn) {
+    addPortfolioBtn.addEventListener('click', () => {
+      const name = prompt("Portfolio name:");
+      createPortfolio(name || "New Portfolio");
+    });
   }
 
   // -----------------------------
@@ -292,51 +291,36 @@ document.addEventListener('DOMContentLoaded', () => {
   async function updateChart(symbol, range) {
     try {
       const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`);
-      if (!resp.ok) { 
-        const info = document.getElementById('stock-info');
-        if (info) info.innerHTML += '<p>No chart data available.</p>'; 
-        return; 
-      }
+      if(!resp.ok) return;
       const json = await resp.json();
-      if (!json || !json.candles || json.candles.length === 0) {
-        const info = document.getElementById('stock-info');
-        if (info) info.innerHTML += '<p>No chart data available.</p>'; 
-        return;
-      }
+      if(!json?.candles?.length) return;
 
-      const financialData = json.candles.map(c => ({ x: new Date(c.t), o: c.o, h: c.h, l: c.l, c: c.c }));
+      const data = json.candles.map(c => ({ x:new Date(c.t), o:c.o, h:c.h, l:c.l, c:c.c }));
       const container = document.getElementById('chart-container');
-      if (container) container.style.display = 'block';
+      if(container) container.style.display = 'block';
       let canvas = document.getElementById('stockChart');
-      if (!canvas) { container.innerHTML = '<canvas id="stockChart"></canvas>'; canvas = document.getElementById('stockChart'); }
+      if(!canvas) { container.innerHTML = '<canvas id="stockChart"></canvas>'; canvas = document.getElementById('stockChart'); }
       const ctx = canvas.getContext('2d');
-      try { if (chart) { chart.destroy(); chart = null; } } catch(e) {}
+      if(chart) chart.destroy();
 
-      if (!preferCandlestick) {
-        const labels = financialData.map(d => d.x);
-        const closePrices = financialData.map(d => d.c);
+      if(!preferCandlestick){
         chart = new Chart(ctx, {
-          type: 'line',
-          data: { labels, datasets: [{ label: `${symbol} Close`, data: closePrices, borderColor: 'blue', fill: false }] },
-          options: { responsive: true, maintainAspectRatio: false }
+          type:'line',
+          data: { labels: data.map(d=>d.x), datasets:[{label:`${symbol} Close`, data:data.map(d=>d.c), borderColor:'blue', fill:false}]},
+          options:{responsive:true, maintainAspectRatio:false}
         });
         return;
       }
 
       chart = new Chart(ctx, {
-        type: 'candlestick',
-        data: { datasets: [{ label: `${symbol} Candles`, data: financialData }] },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { x: { type: 'time', time: { unit: 'day' } }, y: { title: { display: true, text: 'Price ($)' } } }
-        }
+        type:'candlestick',
+        data:{datasets:[{label:`${symbol} Candles`, data:data}]},
+        options:{responsive:true, maintainAspectRatio:false, scales:{x:{type:'time'},y:{title:{display:true,text:'Price ($)'}}}}
       });
-      preferCandlestick = false;
-    } catch (e) {
+      preferCandlestick=false;
+
+    } catch(e) {
       console.error('updateChart error', e);
-      const info = document.getElementById('stock-info');
-      if (info) info.innerHTML += '<p>Error loading chart.</p>';
     }
   }
 

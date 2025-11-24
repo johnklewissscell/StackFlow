@@ -178,6 +178,22 @@ body {
   margin-top: 30px;
 }
 
+/* Container where stock info is shown */
+#stock-info {
+  margin-top: 16px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Optional: make the price text slightly smaller */
+#stock-info .price-line {
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 6px;
+  display: block;
+}
+
 #controls-btns {
   margin-top: 10px;
   display: flex;
