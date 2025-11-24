@@ -24,17 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return parseFloat(String(text).replace(/[^0-9.-]+/g, '')) || 0;
   }
 
-  function createLogoImg(url, alt, size = 24) {
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = alt;
-    img.width = size;
-    img.height = size;
-    img.style.objectFit = 'contain';
-    img.style.verticalAlign = 'middle';
-    return img;
-  }
-
   // -----------------------------
   // Fetch Stock Price
   // -----------------------------
@@ -48,10 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const lastCandle = json.candles[json.candles.length - 1];
       const companyName = json.companyName?.trim() || json.meta?.name?.trim() || symbol;
 
-      // CSP-safe local logo
-      const logoUrl = `/img/logos/${symbol.toLowerCase()}.png`;
-
-      return { price: lastCandle.c, name: companyName, logo: logoUrl };
+      return { price: lastCandle.c, name: companyName };
     } catch (e) {
       console.error('fetchStockPrice error', e);
       return null;
@@ -74,12 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!data) return alert('No price data found for ' + symbol);
 
       const priceEl = document.getElementById('stock-info');
-if (priceEl) {
-  priceEl.innerHTML = `
-    <strong style="font-size:20px;">${data.name}</strong><br>
-    Price: $${data.price.toFixed(2)}
-  `;
-}
+      if (priceEl) {
+        priceEl.innerHTML = `
+          <strong style="font-size:20px;">${data.name}</strong><br>
+          Price: $${data.price.toFixed(2)}<br>
+        `;
+      }
 
       updateChart(symbol, '1M');
     });
@@ -136,26 +122,6 @@ if (priceEl) {
   const portfoliosDiv = document.getElementById('portfolios');
   const addPortfolioBtn = document.getElementById('add-portfolio');
 
-  function listPortfolios() {
-    return Array.from(document.querySelectorAll('.portfolio')).map((el, idx) => ({
-      el,
-      name: el.querySelector('.portfolio-name')?.innerText.trim() || `Portfolio ${idx + 1}`,
-      idx: idx + 1
-    }));
-  }
-
-  function promptChoosePortfolio() {
-    const list = listPortfolios();
-    if (!list.length) { alert('No portfolios found. Create one first.'); return null; }
-    let msg = 'Choose a portfolio number:\n';
-    list.forEach(p => msg += `${p.idx}: ${p.name}\n`);
-    const pick = prompt(msg);
-    if (!pick) return null;
-    const num = parseInt(pick);
-    if (isNaN(num) || num < 1 || num > list.length) { alert('Invalid selection'); return null; }
-    return list[num - 1].el;
-  }
-
   function adjustPortfolioBalance(portEl, deltaAmount) {
     const balEl = portEl.querySelector('.portfolio-balance');
     let bal = parseCurrency(balEl.innerText);
@@ -163,7 +129,7 @@ if (priceEl) {
     balEl.innerText = bal.toFixed(2);
   }
 
-  function updatePortfolioRow(portEl, symbol, price, deltaShares, logoUrl = null) {
+  function updatePortfolioRow(portEl, symbol, price, deltaShares) {
     const tbody = portEl.querySelector('tbody');
     let row = Array.from(tbody.querySelectorAll('tr')).find(r => r.dataset.symbol === symbol);
 
@@ -177,16 +143,9 @@ if (priceEl) {
       row = document.createElement('tr');
       row.dataset.symbol = symbol;
 
-      // Logo + symbol cell
+      // Symbol cell
       const symbolTd = document.createElement('td');
-      symbolTd.style.display = 'flex';
-      symbolTd.style.alignItems = 'center';
-      symbolTd.style.gap = '4px';
-      const logoImg = createLogoImg(logoUrl || `/img/logos/${symbol.toLowerCase()}.png`, symbol);
-      symbolTd.appendChild(logoImg);
-      const symText = document.createElement('span');
-      symText.textContent = symbol;
-      symbolTd.appendChild(symText);
+      symbolTd.textContent = symbol;
       row.appendChild(symbolTd);
 
       // Other cells
@@ -210,7 +169,7 @@ if (priceEl) {
       removeBtn.classList.add('remove-stock');
       removeBtn.textContent = '✖';
       removeBtn.addEventListener('click', () => {
-        balance += parseCurrency(row.children[3].innerText); // refund market value
+        balance += parseCurrency(row.children[3].innerText);
         if(balanceEl) balanceEl.innerText = balance.toFixed(2);
         adjustPortfolioBalance(portEl, parseCurrency(row.children[3].innerText));
         row.remove();
@@ -222,6 +181,7 @@ if (priceEl) {
       return;
     }
 
+    // Update existing row
     if (row) {
       const sharesCell = row.children[1];
       const costBasisCell = row.children[2];
@@ -261,23 +221,29 @@ if (priceEl) {
     `;
     portfoliosDiv.appendChild(port);
 
+    // Delete portfolio
     port.querySelector('.delete-portfolio').addEventListener('click', () => port.remove());
+
+    // Add stock
     port.querySelector('.add-stock').addEventListener('click', async () => {
       const ticker = prompt("Stock symbol:")?.toUpperCase();
       if(!ticker) return;
       const shares = parseFloat(prompt("Shares:"));
       if(isNaN(shares) || shares <=0) return alert("Invalid number");
+
       let price = 0;
       try {
         const data = await fetchStockPrice(ticker);
         if(data) price = data.price;
       } catch {}
       if(price <=0) price = parseFloat(prompt("Cost per share:"));
+
       updatePortfolioRow(port, ticker, price, shares);
       adjustPortfolioBalance(port, -shares*price);
     });
   }
 
+  // Attach event to New Portfolio button
   if(addPortfolioBtn) {
     addPortfolioBtn.addEventListener('click', () => {
       const name = prompt("Portfolio name:");
