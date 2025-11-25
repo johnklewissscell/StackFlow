@@ -1,44 +1,40 @@
-// stock.js
-export async function onRequest(context) {
+// api/stock.js
+import express from "express";
+import fetch from "node-fetch"; // npm install node-fetch
+
+const router = express.Router();
+const API_KEY = "GQOVP7IEEHP0PGOH"; // Replace with your key
+
+router.get("/stock", async (req, res) => {
+  const symbol = (req.query.symbol || "AAPL").toUpperCase();
+  const functionType = "TIME_SERIES_DAILY"; // simplest for testing
+
+  const url = `https://www.alphavantage.co/query?function=${functionType}&symbol=${symbol}&apikey=${API_KEY}`;
+
   try {
-    const url = new URL(context.request.url);
-    const symbol = url.searchParams.get("symbol")?.toUpperCase() || "AAPL";
+    const response = await fetch(url);
+    const data = await response.json();
 
-    const API_KEY = "GQOVP7IEEHP0PGOH"; // <--- put your key here or use env
+    const series = data["Time Series (Daily)"];
+    if (!series) return res.json({ candles: [], companyName: symbol });
 
-    // Fetch latest stock price using Global Quote
-    const quoteResp = await fetch(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${API_KEY}`
-    );
+    const candles = Object.entries(series)
+      .slice(0, 60) // last 60 days
+      .map(([date, values]) => ({
+        t: new Date(date).getTime(),
+        o: parseFloat(values["1. open"]),
+        h: parseFloat(values["2. high"]),
+        l: parseFloat(values["3. low"]),
+        c: parseFloat(values["4. close"]),
+        v: parseFloat(values["5. volume"])
+      }))
+      .reverse(); // oldest → newest
 
-    if (!quoteResp.ok) throw new Error(`Alpha Vantage rejected request: ${quoteResp.status}`);
-    const quoteJson = await quoteResp.json();
-
-    const globalQuote = quoteJson["Global Quote"];
-    if (!globalQuote || !globalQuote["05. price"]) {
-      return new Response(
-        JSON.stringify({ candles: [], companyName: symbol }),
-        { headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const price = parseFloat(globalQuote["05. price"]);
-    const timestamp = Date.now();
-
-    // Return a single "candle" so frontend chart always works
-    const candles = [
-      { t: timestamp, o: price, h: price, l: price, c: price, v: parseInt(globalQuote["06. volume"] || "0") }
-    ];
-
-    return new Response(JSON.stringify({ candles, companyName: symbol }), {
-      headers: { "Content-Type": "application/json" }
-    });
-
+    res.json({ candles, companyName: symbol });
   } catch (err) {
-    console.error("stock.js error:", err);
-    return new Response(
-      JSON.stringify({ error: err.message, candles: [], companyName: "Unknown" }),
-      { headers: { "Content-Type": "application/json" }, status: 500 }
-    );
+    console.error(err);
+    res.status(500).json({ error: err.message, candles: [], companyName: symbol });
   }
-}
+});
+
+export default router;

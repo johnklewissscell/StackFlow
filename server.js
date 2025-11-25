@@ -1,8 +1,16 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import express from "express";
+import stockRouter from "./api/stock.js";
 
 const app = express();
+app.use("/api", stockRouter);
+
+app.use(express.static("public")); // serve your HTML + application.js
+
+const port = 3000;
+app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
 
 // Must come BEFORE any POST routes!
 app.use(express.json());
