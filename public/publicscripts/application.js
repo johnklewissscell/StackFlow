@@ -19,82 +19,73 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
   // Fetch stock price using Cloudflare function
   // -----------------------------
-  async function fetchStockPrice(symbol, range = "1M") {
-    try {
-      const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=${range}`);
-      if (!resp.ok) return null;
+  async function fetchStockPrice(symbol) {
+  try {
+    const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}`);
+    if (!resp.ok) return null;
 
-      const json = await resp.json();
-      const quote = json.chart?.result?.[0];
-      if (!quote) return null;
+    const json = await resp.json();
+    const candle = json.candles?.[json.candles.length - 1];
+    if (!candle || !candle.c) return null;
 
-      const lastClose = quote.indicators?.quote?.[0]?.close?.slice(-1)[0];
-      if (!lastClose) return null;
-
-      return { price: lastClose, name: symbol };
-    } catch (err) {
-      console.error("fetchStockPrice error", err);
-      return null;
-    }
+    return { price: candle.c, name: json.companyName };
+  } catch (err) {
+    console.error("fetchStockPrice error", err);
+    return null;
   }
+}
 
   // -----------------------------
   // Update chart
   // -----------------------------
-  async function updateChart(symbol, range) {
-    try {
-      const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=${range}`);
-      if (!resp.ok) return;
-      const json = await resp.json();
-      const quote = json.chart?.result?.[0];
-      if (!quote || !quote.timestamp?.length) return;
+  async function updateChart(symbol) {
+  try {
+    const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}`);
+    if (!resp.ok) return;
+    const json = await resp.json();
+    if (!json?.candles?.length) return;
 
-      const timestamps = quote.timestamp.map(t => new Date(t * 1000));
-      const closes = quote.indicators.quote[0].close;
+    const data = json.candles.map(c => ({
+      x: new Date(c.t),
+      o: c.o,
+      h: c.h,
+      l: c.l,
+      c: c.c
+    }));
 
-      const data = timestamps.map((t, i) => ({
-        x: t,
-        o: quote.indicators.quote[0].open[i],
-        h: quote.indicators.quote[0].high[i],
-        l: quote.indicators.quote[0].low[i],
-        c: closes[i]
-      }));
+    const container = document.getElementById("chart-container");
+    if (container) container.style.display = "block";
 
-      const container = document.getElementById("chart-container");
-      if (container) container.style.display = "block";
-
-      let canvas = document.getElementById("stockChart");
-      if (!canvas) {
-        container.innerHTML = `<canvas id="stockChart"></canvas>`;
-        canvas = document.getElementById("stockChart");
-      }
-      const ctx = canvas.getContext("2d");
-
-      if (chart) chart.destroy();
-
-      if (!preferCandlestick) {
-        chart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: data.map(d => d.x),
-            datasets: [
-              { label: `${symbol} Close`, data: data.map(d => d.c), borderColor: "blue", fill: false }
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      } else {
-        chart = new Chart(ctx, {
-          type: "candlestick",
-          data: { datasets: [{ label: `${symbol} Candles`, data }] },
-          options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: "time" } } }
-        });
-        preferCandlestick = false;
-      }
-    } catch (err) {
-      console.error("updateChart error", err);
+    let canvas = document.getElementById("stockChart");
+    if (!canvas) {
+      container.innerHTML = `<canvas id="stockChart"></canvas>`;
+      canvas = document.getElementById("stockChart");
     }
+    const ctx = canvas.getContext("2d");
+
+    if (chart) chart.destroy();
+
+    if (!preferCandlestick) {
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: data.map(d => d.x),
+          datasets: [{ label: `${symbol} Close`, data: data.map(d => d.c), borderColor: "blue", fill: false }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    } else {
+      chart = new Chart(ctx, {
+        type: "candlestick",
+        data: { datasets: [{ label: `${symbol} Candles`, data }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: "time" } } }
+      });
+      preferCandlestick = false;
+    }
+  } catch (err) {
+    console.error("updateChart error", err);
   }
+}
 
   // -----------------------------
   // Price Lookup
