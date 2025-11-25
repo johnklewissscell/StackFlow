@@ -1,4 +1,4 @@
-// application.js
+// public/application.js
 document.addEventListener("DOMContentLoaded", () => {
   console.log("application.js loaded");
 
@@ -6,79 +6,68 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentSymbol = null;
   let preferCandlestick = false;
 
+  // -----------------------------
+  // Utility
+  // -----------------------------
   function parseCurrency(val) {
     return parseFloat(String(val).replace(/[^0-9.-]+/g, "")) || 0;
   }
 
   // -----------------------------
-  // Fetch stock via server-side API
+  // Fetch stock price from server proxy
+  // -----------------------------
   async function fetchStockPrice(symbol) {
     try {
       const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}`);
       if (!resp.ok) return null;
-
       const json = await resp.json();
-      const last = json.candles?.slice(-1)[0];
-      if (!last) return null;
-
-      return { price: last.c, name: symbol, candles: json.candles };
+      if (!json?.price) return null;
+      return { price: json.price, name: json.name };
     } catch (err) {
-      console.error("fetchStockPrice error:", err);
+      console.error("fetchStockPrice error", err);
       return null;
     }
   }
 
   // -----------------------------
-  // Update chart
-  async function updateChart(symbol) {
-    const info = await fetchStockPrice(symbol);
-    if (!info) return alert("No data for " + symbol);
-
-    const data = info.candles.map(c => ({
-      x: new Date(c.t),
-      o: c.o,
-      h: c.h,
-      l: c.l,
-      c: c.c
-    }));
-
+  // Update chart placeholder (we just simulate chart for now)
+  // -----------------------------
+  function updateChart(symbol, range) {
     const container = document.getElementById("chart-container");
-    if (container) container.style.display = "block";
+    if (!container) return;
+    container.style.display = "block";
 
-    let canvas = document.getElementById("stockChart");
+    const canvasId = "stockChart";
+    let canvas = document.getElementById(canvasId);
     if (!canvas) {
-      container.innerHTML = `<canvas id="stockChart"></canvas>`;
-      canvas = document.getElementById("stockChart");
+      container.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+      canvas = document.getElementById(canvasId);
     }
     const ctx = canvas.getContext("2d");
 
+    // Simulate some chart data (for demonstration)
+    const labels = Array.from({ length: 10 }, (_, i) => `Day ${i+1}`);
+    const data = Array.from({ length: 10 }, () => Math.random() * 100 + 100);
+
     if (chart) chart.destroy();
 
-    if (!preferCandlestick) {
-      chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: data.map(d => d.x),
-          datasets: [{ label: `${symbol} Close`, data: data.map(d => d.c), borderColor: "blue", fill: false }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    } else {
-      chart = new Chart(ctx, {
-        type: "candlestick",
-        data: { datasets: [{ label: `${symbol} Candles`, data }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: "time" } } }
-      });
-      preferCandlestick = false;
-    }
+    chart = new Chart(ctx, {
+      type: preferCandlestick ? "candlestick" : "line",
+      data: {
+        labels,
+        datasets: [
+          { label: `${symbol} Price`, data, borderColor: "blue", fill: false }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
 
-    // Update current price display
-    const stockInfo = document.getElementById("stock-info");
-    stockInfo.innerHTML = `<strong style="font-size:20px;">${symbol}</strong><br>Price: $${info.price.toFixed(2)}`;
+    preferCandlestick = false;
   }
 
   // -----------------------------
   // Price Lookup
+  // -----------------------------
   const getPriceBtn = document.getElementById("get-price");
   if (getPriceBtn) {
     getPriceBtn.addEventListener("click", async () => {
@@ -87,22 +76,42 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!symbol) return alert("Enter ticker symbol.");
 
       currentSymbol = symbol;
-      updateChart(symbol);
+
+      const info = await fetchStockPrice(symbol);
+      if (!info) return alert("No data for " + symbol);
+
+      const stockInfo = document.getElementById("stock-info");
+      stockInfo.innerHTML = `<strong style="font-size:20px;">${info.name}</strong><br>Price: $${info.price.toFixed(2)}`;
+
+      updateChart(symbol, "1M");
     });
   }
 
   // -----------------------------
   // Candlestick toggle
+  // -----------------------------
   const toggleBtn = document.getElementById("toggleCandle");
   if (toggleBtn) {
     toggleBtn.addEventListener("click", () => {
       preferCandlestick = true;
-      if (currentSymbol) updateChart(currentSymbol);
+      if (currentSymbol) updateChart(currentSymbol, "1M");
     });
   }
 
   // -----------------------------
-  // PORTFOLIOS (same as before)
+  // Time range buttons
+  // -----------------------------
+  document.querySelectorAll("#time-range button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (!currentSymbol) return alert("Pick a stock first.");
+      const range = btn.dataset.range;
+      updateChart(currentSymbol, range);
+    });
+  });
+
+  // -----------------------------
+  // PORTFOLIOS
+  // -----------------------------
   const portfoliosDiv = document.getElementById("portfolios");
   const addPortfolioBtn = document.getElementById("add-portfolio");
 
@@ -115,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function createStockRow(portEl, symbol, shares, price) {
     const tbody = portEl.querySelector("tbody");
     const totalCost = shares * price;
+
     const row = document.createElement("tr");
     row.dataset.symbol = symbol;
     row.innerHTML = `
@@ -128,6 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <td>—</td>
       <td></td>
     `;
+
     const actionCell = row.children[8];
     const sellBtn = document.createElement("button");
     sellBtn.textContent = "Sell";
@@ -164,6 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function createPortfolio(name = "New Portfolio", startingBalance = 10000) {
     const port = document.createElement("div");
     port.classList.add("portfolio");
+
     port.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h3 contenteditable="true" class="portfolio-name">${name}</h3>
@@ -188,15 +200,18 @@ document.addEventListener("DOMContentLoaded", () => {
         <tbody></tbody>
       </table>
     `;
+
     portfoliosDiv.appendChild(port);
 
     const nameEl = port.querySelector(".portfolio-name");
     const balanceElPort = port.querySelector(".portfolio-balance");
+
     const state = { lastAppliedName: "" };
 
     function applyEasterEggs() {
       const newName = nameEl.innerText.trim();
       if (state.lastAppliedName === newName) return;
+
       let bal = parseCurrency(balanceElPort.innerText);
       switch (newName) {
         case "Mastercard": bal *= 2; break;
@@ -210,9 +225,11 @@ document.addEventListener("DOMContentLoaded", () => {
         case "Unicorn": bal = 1111; break;
         case "Rainbow": bal = 777; break;
       }
+
       balanceElPort.innerText = bal.toFixed(2);
       state.lastAppliedName = newName;
     }
+
     applyEasterEggs();
     nameEl.addEventListener("blur", applyEasterEggs);
 
@@ -226,4 +243,5 @@ document.addEventListener("DOMContentLoaded", () => {
       createPortfolio(name);
     });
   }
+
 });
