@@ -20,12 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch stock price
   // -----------------------------
   async function fetchStockPrice(symbol) {
-  const API_KEY = "GQOVP7IEEHP0PGOH"; // Or ALPHA_VANTAGE_KEY from env
   try {
-    const resp = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${API_KEY}`);
+    const resp = await fetch(`/api/stock?symbol=${symbol}`);
     if (!resp.ok) return null;
     const json = await resp.json();
-    
+
     const quote = json["Global Quote"];
     if (!quote || !quote["05. price"]) return null;
 
