@@ -5,7 +5,6 @@ export async function onRequest(context) {
     const symbol = url.searchParams.get("symbol")?.toUpperCase() || "AAPL";
     const range = url.searchParams.get("range") || "1M";
 
-    // Map your frontend ranges to Yahoo intervals
     const ranges = {
       "1D": { interval: "1m", range: "1d" },
       "1M": { interval: "1d", range: "1mo" },
@@ -16,7 +15,6 @@ export async function onRequest(context) {
 
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${r.interval}&range=${r.range}`;
 
-    // Yahoo requires a User-Agent header to avoid rejection
     const response = await fetch(yahooUrl, {
       headers: { "User-Agent": "Mozilla/5.0 (CF Pages Bot)" }
     });
@@ -30,18 +28,40 @@ export async function onRequest(context) {
 
     const data = await response.json();
 
-    // Check that chart.result exists
-    if (!data.chart?.result?.[0]) {
+    const result = data.chart?.result?.[0];
+    if (!result) {
       return new Response(
-        JSON.stringify({ error: "No chart data found for symbol: " + symbol }),
+        JSON.stringify({ error: `No chart data for ${symbol}` }),
         { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Return the raw Yahoo chart data
-    return new Response(JSON.stringify(data), {
-      headers: { "Content-Type": "application/json" }
-    });
+    const timestamps = result.timestamp;
+    const quotes = result.indicators?.quote?.[0];
+
+    if (!timestamps || !quotes) {
+      return new Response(
+        JSON.stringify({ error: `Incomplete chart data for ${symbol}` }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const candles = timestamps.map((t, i) => ({
+      t: t * 1000, // convert to ms
+      o: quotes.open[i],
+      h: quotes.high[i],
+      l: quotes.low[i],
+      c: quotes.close[i],
+      v: quotes.volume[i]
+    }));
+
+    return new Response(
+      JSON.stringify({
+        candles,
+        companyName: symbol
+      }),
+      { headers: { "Content-Type": "application/json" } }
+    );
 
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
