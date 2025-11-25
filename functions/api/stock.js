@@ -1,40 +1,43 @@
-// api/stock.js
-import express from "express";
-import fetch from "node-fetch"; // npm install node-fetch
+// /api/stock.js
+const API_KEY = "GQOVP7IEEHP0PGOH";
 
-const router = express.Router();
-const API_KEY = "GQOVP7IEEHP0PGOH"; // Replace with your key
-
-router.get("/stock", async (req, res) => {
-  const symbol = (req.query.symbol || "AAPL").toUpperCase();
-  const functionType = "TIME_SERIES_DAILY"; // simplest for testing
-
-  const url = `https://www.alphavantage.co/query?function=${functionType}&symbol=${symbol}&apikey=${API_KEY}`;
-
+export async function onRequest(context) {
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    const url = new URL(context.request.url);
+    const symbol = url.searchParams.get("symbol")?.toUpperCase() || "AAPL";
 
-    const series = data["Time Series (Daily)"];
-    if (!series) return res.json({ candles: [], companyName: symbol });
+    // Use Alpha Vantage TIME_SERIES_DAILY
+    const alphaUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${API_KEY}`;
 
-    const candles = Object.entries(series)
-      .slice(0, 60) // last 60 days
-      .map(([date, values]) => ({
-        t: new Date(date).getTime(),
-        o: parseFloat(values["1. open"]),
-        h: parseFloat(values["2. high"]),
-        l: parseFloat(values["3. low"]),
-        c: parseFloat(values["4. close"]),
-        v: parseFloat(values["5. volume"])
-      }))
-      .reverse(); // oldest → newest
+    const resp = await fetch(alphaUrl);
+    if (!resp.ok) throw new Error(`Alpha Vantage error: ${resp.status}`);
 
-    res.json({ candles, companyName: symbol });
+    const data = await resp.json();
+    const timeSeries = data["Time Series (Daily)"];
+    if (!timeSeries) throw new Error("No data returned from Alpha Vantage");
+
+    // Convert to chart-compatible candles
+    const candles = Object.keys(timeSeries)
+      .sort()
+      .map(dateStr => {
+        const day = timeSeries[dateStr];
+        return {
+          t: new Date(dateStr).getTime(),
+          o: parseFloat(day["1. open"]),
+          h: parseFloat(day["2. high"]),
+          l: parseFloat(day["3. low"]),
+          c: parseFloat(day["4. close"]),
+          v: parseFloat(day["6. volume"])
+        };
+      });
+
+    return new Response(JSON.stringify({ candles, companyName: symbol }), {
+      headers: { "Content-Type": "application/json" }
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message, candles: [], companyName: symbol });
+    return new Response(JSON.stringify({ error: err.message, candles: [], companyName: symbol }), {
+      headers: { "Content-Type": "application/json" },
+      status: 500
+    });
   }
-});
-
-export default router;
+}

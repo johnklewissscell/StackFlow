@@ -8,21 +8,35 @@
   <meta http-equiv="Content-Security-Policy"
   content="
     default-src 'self';
-    script-src 'self' https://cdn.jsdelivr.net https://s3.tradingview.com https://www.gstatic.com https://www.googleapis.com;
+    
+    script-src 'self' 
+      https://cdn.jsdelivr.net 
+      https://s3.tradingview.com 
+      https://www.gstatic.com 
+      https://www.googleapis.com;
+    
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self'
-      https://query1.finance.yahoo.com
-      https://cdn.jsdelivr.net
-      https://firestore.googleapis.com
-      https://firebasestorage.googleapis.com
-      https://us-central1-aiplatform.googleapis.com
-      https://vertexai.googleapis.com
-      https://firebasevertexai.googleapis.com
-      https://www.googleapis.com
+    
+    connect-src 'self' 
+      https://query1.finance.yahoo.com 
+      https://cdn.jsdelivr.net 
+      https://firestore.googleapis.com 
+      https://firebasestorage.googleapis.com 
+      https://us-central1-aiplatform.googleapis.com 
+      https://vertexai.googleapis.com 
+      https://firebasevertexai.googleapis.com 
+      https://www.googleapis.com 
       https://www.gstatic.com;
+    
     img-src 'self' data: blob:;
+    
     frame-src https://www.tradingview.com;
+    
+    base-uri 'self';
+    form-action 'self';
+    upgrade-insecure-requests;
   "
 >
 
