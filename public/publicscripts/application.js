@@ -17,24 +17,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -----------------------------
-  // Fetch stock price
+  // Fetch stock price using Cloudflare function
   // -----------------------------
-  async function fetchStockPrice(symbol) {
-  try {
-    const resp = await fetch(`/api/stock?symbol=${symbol}`);
-    if (!resp.ok) return null;
-    const json = await resp.json();
+  async function fetchStockPrice(symbol, range = "1M") {
+    try {
+      const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=${range}`);
+      if (!resp.ok) return null;
 
-    const quote = json["Global Quote"];
-    if (!quote || !quote["05. price"]) return null;
+      const json = await resp.json();
+      const quote = json.chart?.result?.[0];
+      if (!quote) return null;
 
-    const price = parseFloat(quote["05. price"]);
-    return { price, name: symbol };
-  } catch (err) {
-    console.error("fetchStockPrice error", err);
-    return null;
+      const lastClose = quote.indicators?.quote?.[0]?.close?.slice(-1)[0];
+      if (!lastClose) return null;
+
+      return { price: lastClose, name: symbol };
+    } catch (err) {
+      console.error("fetchStockPrice error", err);
+      return null;
+    }
   }
-}
 
   // -----------------------------
   // Update chart
@@ -44,14 +46,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=${range}`);
       if (!resp.ok) return;
       const json = await resp.json();
-      if (!json?.candles?.length) return;
+      const quote = json.chart?.result?.[0];
+      if (!quote || !quote.timestamp?.length) return;
 
-      const data = json.candles.map(c => ({
-        x: new Date(c.t),
-        o: c.o,
-        h: c.h,
-        l: c.l,
-        c: c.c
+      const timestamps = quote.timestamp.map(t => new Date(t * 1000));
+      const closes = quote.indicators.quote[0].close;
+
+      const data = timestamps.map((t, i) => ({
+        x: t,
+        o: quote.indicators.quote[0].open[i],
+        h: quote.indicators.quote[0].high[i],
+        l: quote.indicators.quote[0].low[i],
+        c: closes[i]
       }));
 
       const container = document.getElementById("chart-container");
@@ -260,9 +266,8 @@ document.addEventListener("DOMContentLoaded", () => {
       state.lastAppliedName = newName;
     }
 
-    // Immediately apply easter egg if name matches
+    // Apply easter egg immediately
     applyEasterEggs();
-    // Also trigger when user edits the name
     nameEl.addEventListener("blur", applyEasterEggs);
 
     port.querySelector(".delete-portfolio").addEventListener("click", () => port.remove());
@@ -277,10 +282,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -----------------------------
-  // REFRESH STOCK PRICES (does NOT change cash)
+  // Refresh stock prices (does not change cash)
   // -----------------------------
   const refreshBtn = document.getElementById("refresh-control");
-
   if (refreshBtn) {
     refreshBtn.addEventListener("click", async () => {
       if (currentSymbol) updateChart(currentSymbol, "1M");
