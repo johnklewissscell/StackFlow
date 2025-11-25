@@ -1,4 +1,3 @@
-// functions/api/stock.js
 export async function onRequest(context) {
   try {
     const url = new URL(context.request.url);
@@ -6,7 +5,7 @@ export async function onRequest(context) {
     const range = url.searchParams.get("range") || "1M";
 
     const ranges = {
-      "1D": { interval: "1m", range: "1d" },
+      "1D": { interval: "5m", range: "1d" }, // use 5m instead of 1m
       "1M": { interval: "1d", range: "1mo" },
       "1Y": { interval: "1wk", range: "1y" },
       "5Y": { interval: "1mo", range: "5y" },
@@ -15,58 +14,29 @@ export async function onRequest(context) {
 
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${r.interval}&range=${r.range}`;
 
-    const response = await fetch(yahooUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (CF Pages Bot)" }
-    });
-
-    if (!response.ok) {
-      return new Response(
-        JSON.stringify({ error: `Yahoo rejected request`, status: response.status }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    const response = await fetch(yahooUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!response.ok) throw new Error(`Yahoo rejected request: ${response.status}`);
 
     const data = await response.json();
-
     const result = data.chart?.result?.[0];
-    if (!result) {
-      return new Response(
-        JSON.stringify({ error: `No chart data for ${symbol}` }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
 
-    const timestamps = result.timestamp;
+    if (!result) return new Response(JSON.stringify({ candles: [], companyName: symbol }), { headers: { "Content-Type": "application/json" } });
+
+    const timestamps = result.timestamp || [];
     const quotes = result.indicators?.quote?.[0];
 
-    if (!timestamps || !quotes) {
-      return new Response(
-        JSON.stringify({ error: `Incomplete chart data for ${symbol}` }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
     const candles = timestamps.map((t, i) => ({
-      t: t * 1000, // convert to ms
-      o: quotes.open[i],
-      h: quotes.high[i],
-      l: quotes.low[i],
-      c: quotes.close[i],
-      v: quotes.volume[i]
+      t: t * 1000,
+      o: quotes?.open[i] ?? null,
+      h: quotes?.high[i] ?? null,
+      l: quotes?.low[i] ?? null,
+      c: quotes?.close[i] ?? null,
+      v: quotes?.volume[i] ?? null
     }));
 
-    return new Response(
-      JSON.stringify({
-        candles,
-        companyName: symbol
-      }),
-      { headers: { "Content-Type": "application/json" } }
-    );
-
+    return new Response(JSON.stringify({ candles, companyName: symbol }), { headers: { "Content-Type": "application/json" } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    console.error("stock.js error:", err);
+    return new Response(JSON.stringify({ error: err.message, candles: [], companyName: "Unknown" }), { headers: { "Content-Type": "application/json" }, status: 500 });
   }
 }
