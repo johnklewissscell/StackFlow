@@ -19,22 +19,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
   // Fetch stock price
   // -----------------------------
-  async function fetchStockPrice(symbol, range = "1M") {
-    try {
-      const resp = await fetch(`/api/stock?symbol=${encodeURIComponent(symbol)}&range=${range}`);
-      if (!resp.ok) return null;
-      const json = await resp.json();
-      if (!json?.candles?.length) return null;
+  async function fetchStockPrice(symbol) {
+  const API_KEY = "GQOVP7IEEHP0PGOH"; // Or ALPHA_VANTAGE_KEY from env
+  try {
+    const resp = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${API_KEY}`);
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    
+    const quote = json["Global Quote"];
+    if (!quote || !quote["05. price"]) return null;
 
-      const last = json.candles[json.candles.length - 1];
-      const companyName = json.companyName || json.meta?.name || symbol;
-
-      return { price: last.c, name: companyName };
-    } catch (err) {
-      console.error("fetchStockPrice error", err);
-      return null;
-    }
+    const price = parseFloat(quote["05. price"]);
+    return { price, name: symbol };
+  } catch (err) {
+    console.error("fetchStockPrice error", err);
+    return null;
   }
+}
 
   // -----------------------------
   // Update chart
