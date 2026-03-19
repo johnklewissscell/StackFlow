@@ -52,7 +52,7 @@ export async function getHistoricalData(symbol, range = "1M") {
       l: data.l[i],
       c: data.c[i]
     }));
-  } catch {
+  } catch (e) {
     return [];
   }
 }
