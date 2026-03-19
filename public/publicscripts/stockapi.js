@@ -56,20 +56,3 @@ export async function getHistoricalData(symbol, range = "1M") {
     return [];
   }
 }
-
-  const proxyConfigs = [
-    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, wrapped: true },
-    { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, wrapped: false },
-    { url: `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, wrapped: false }
-  ];
-
-  try {
-    const formatted = await Promise.any(proxyConfigs.map(p => fetchFromProxy(p.url, p.wrapped)));
-    if (formatted && formatted.length > 0) {
-      localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: formatted }));
-      return formatted;
-    }
-  } catch (e) {
-    return [];
-  }
-  return [];
