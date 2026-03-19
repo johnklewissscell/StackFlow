@@ -27,9 +27,7 @@ export async function getHistoricalData(symbol, range = "1M") {
   const saved = localStorage.getItem(cacheKey);
   if (saved) {
     const parsed = JSON.parse(saved);
-    if (Date.now() - parsed.time < 300000) {
-      return parsed.data;
-    }
+    if (Date.now() - parsed.time < 300000) return parsed.data;
   }
 
   if (currentAbortController) currentAbortController.abort();
@@ -51,26 +49,16 @@ export async function getHistoricalData(symbol, range = "1M") {
     if (!data.chart || !data.chart.result) return [];
     
     const result = data.chart.result[0];
-    const timestamps = result.timestamp;
-    const quotes = result.indicators.quote[0];
-
-    const formatted = timestamps.map((time, i) => {
-      if (!quotes.open || quotes.open[i] === null) return null;
-      return {
-        x: time * 1000,
-        o: quotes.open[i],
-        h: quotes.high[i],
-        l: quotes.low[i],
-        c: quotes.close[i]
-      };
+    const formatted = result.timestamp.map((time, i) => {
+      const q = result.indicators.quote[0];
+      if (!q.open || q.open[i] === null) return null;
+      return { x: time * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i] };
     }).filter(item => item !== null);
 
     cache.set(cacheKey, formatted);
     localStorage.setItem(cacheKey, JSON.stringify({time: Date.now(), data: formatted}));
-    
     return formatted;
   } catch (e) {
-    if (e.name === 'AbortError') return null;
     return [];
   }
 }
