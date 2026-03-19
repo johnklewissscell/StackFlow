@@ -67,7 +67,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("get-price").addEventListener("click", () => {
     const symbol = document.getElementById("stock-symbol").value.trim().toUpperCase();
-    if (symbol) updateStock(symbol, currentRange);
+    if (symbol) {
+      preferCandlestick = false;
+      updateStock(symbol, currentRange);
+    }
   });
 
   document.getElementById("toggleCandle").addEventListener("click", () => {
@@ -91,7 +94,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = portEl.querySelector("tbody");
     const totalCost = shares * price;
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${symbol}</td><td>${shares}</td><td>$${price.toFixed(2)}</td><td>$${totalCost.toFixed(2)}</td><td>$${totalCost.toFixed(2)}</td><td>$0.00</td><td>0.00%</td><td>—</td><td></td>`;
+    
+    row.innerHTML = `
+      <td>${symbol}</td>
+      <td>${shares}</td>
+      <td>$${price.toFixed(2)}</td>
+      <td>$${totalCost.toFixed(2)}</td>
+      <td>$${totalCost.toFixed(2)}</td>
+      <td>$0.00</td>
+      <td>0.00%</td>
+      <td>—</td>
+      <td></td>
+    `;
     
     if (symbol !== "SECRETSAUCE") {
       const sellBtn = document.createElement("button");
@@ -112,20 +126,63 @@ document.addEventListener("DOMContentLoaded", () => {
     const symbol = prompt("Symbol:")?.toUpperCase();
     const shares = parseFloat(prompt("Shares:"));
     if (!symbol || !shares) return;
+
+    if (symbol === "GME" && shares >= 10) adjustCash(portEl, 100);
+    if (symbol === "SECRETSAUCE") adjustCash(portEl, 500);
+
     let price = await getStockPrice(symbol);
     if (!price) price = symbol === "SECRETSAUCE" ? 0 : parseFloat(prompt("Price:"));
+    
     const cost = shares * price;
-    if (cost > parseCurrency(portEl.querySelector(".portfolio-balance").innerText)) return alert("No cash");
+    if (cost > parseCurrency(portEl.querySelector(".portfolio-balance").innerText)) {
+      return alert("No cash");
+    }
+
     adjustCash(portEl, -cost);
     createStockRow(portEl, symbol, shares, price);
   }
 
   function createPortfolio(name = "Portfolio", bal = 10000) {
-    const n = name.trim();
     let fBal = bal;
+    const n = name.trim();
+
+    if (n === "Mastercard") fBal *= 2;
+    else if (n === "Bitcoin") fBal *= 3;
+    else if (n === "Elon") fBal = 1000000;
+    else if (n === "Warren") fBal += 10000;
+    else if (n === "Jeff") fBal = 500000;
+    else if (n === "Tesla") fBal = 69000;
+    else if (n === "MemeCoin") fBal += 420;
+    else if (n === "DogeCoin") fBal += 1337;
+    else if (n === "Unicorn") fBal = 1111;
+    else if (n === "Rainbow") fBal = 777;
+
     const port = document.createElement("div");
     port.className = "portfolio";
-    port.innerHTML = `<div><h3 contenteditable="true">${n}</h3><button class="del-port">Delete</button></div><p>Balance: $<span class="portfolio-balance">${fBal.toFixed(2)}</span></p><button class="add-s">Add Stock</button><table class="stock-table"><thead><tr><th>Ticker</th><th>Shares</th><th>Cost</th><th>Total</th><th>Market</th><th>Gain</th><th>%</th><th>Port %</th><th>Action</th></tr></thead><tbody></tbody></table>`;
+    port.innerHTML = `
+      <div>
+        <h3 contenteditable="true">${n}</h3>
+        <button class="del-port">Delete</button>
+      </div>
+      <p>Balance: $<span class="portfolio-balance">${fBal.toFixed(2)}</span></p>
+      <button class="add-s">Add Stock</button>
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Shares</th>
+            <th>Cost</th>
+            <th>Total</th>
+            <th>Market</th>
+            <th>Gain</th>
+            <th>%</th>
+            <th>Port %</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    `;
     portfoliosDiv.appendChild(port);
     port.querySelector(".del-port").onclick = () => port.remove();
     port.querySelector(".add-s").onclick = () => addStockToPortfolio(port);
