@@ -1,0 +1,119 @@
+[debug] [2026-03-19T21:19:38.766Z] ----------------------------------------------------------------------
+[debug] [2026-03-19T21:19:38.768Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\owenp\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-03-19T21:19:38.768Z] CLI Version:   15.8.0
+[debug] [2026-03-19T21:19:38.768Z] Platform:      win32
+[debug] [2026-03-19T21:19:38.768Z] Node Version:  v24.13.0
+[debug] [2026-03-19T21:19:38.768Z] Time:          Thu Mar 19 2026 17:19:38 GMT-0400 (Eastern Daylight Time)
+[debug] [2026-03-19T21:19:38.768Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-19T21:19:38.770Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-03-19T21:19:39.979Z] Object "" in "firebase.json" has unknown property: {"additionalProperty":"projects"}
+[debug] [2026-03-19T21:19:39.983Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-19T21:19:39.983Z] > authorizing via signed-in user (johnklewisss@gmail.com)
+[debug] [2026-03-19T21:19:39.983Z] [iam] checking project stackflow-1 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-03-19T21:19:39.984Z] Checked if tokens are valid: false, expires at: 1773940044815
+[debug] [2026-03-19T21:19:39.984Z] Checked if tokens are valid: false, expires at: 1773940044815
+[debug] [2026-03-19T21:19:39.984Z] > refreshing access token with scopes: []
+[debug] [2026-03-19T21:19:39.985Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-03-19T21:19:39.985Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-03-19T21:19:40.510Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-03-19T21:19:40.510Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-03-19T21:19:40.525Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-03-19T21:19:40.525Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-03-19T21:19:40.531Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/stackflow-1:testIamPermissions [none]
+[debug] [2026-03-19T21:19:40.531Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/stackflow-1:testIamPermissions  x-goog-user-project=stackflow-1
+[debug] [2026-03-19T21:19:40.531Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/stackflow-1:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-03-19T21:19:40.868Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/stackflow-1:testIamPermissions 200
+[debug] [2026-03-19T21:19:40.869Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/stackflow-1:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-03-19T21:19:40.870Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:40.870Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:40.870Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/stackflow-1 [none]
+[debug] [2026-03-19T21:19:41.413Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/stackflow-1 200
+[debug] [2026-03-19T21:19:41.413Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/stackflow-1 {"projectId":"stackflow-1","projectNumber":"932226498137","displayName":"StackFlow","name":"projects/stackflow-1","resources":{"hostingSite":"stackflow-1"},"state":"ACTIVE","etag":"1_5d4df3ed-2543-47bf-b8a8-b35fdf1dc0de"}
+[info] 
+[info] === Deploying to 'stackflow-1'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2026-03-19T21:19:41.421Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:41.421Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:41.421Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stackflow-1/versions [none]
+[debug] [2026-03-19T21:19:41.421Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stackflow-1/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-03-19T21:19:42.406Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stackflow-1/versions 200
+[debug] [2026-03-19T21:19:42.407Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stackflow-1/versions {"name":"projects/932226498137/sites/stackflow-1/versions/512a06a0719c9131","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[stackflow-1]: beginning deploy... 
+[info] i  hosting[stackflow-1]: found 27 files in public 
+[debug] [2026-03-19T21:19:42.435Z] [hosting] uploading with 200 concurrency
+[debug] [2026-03-19T21:19:42.449Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.449Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.450Z] [hosting] hash cache [cHVibGlj] stored for 27 files
+[debug] [2026-03-19T21:19:42.450Z] [hosting][hash queue][FINAL] {"max":10,"min":1,"avg":2.3703703703703702,"active":0,"complete":27,"success":27,"errored":0,"retried":0,"total":27,"elapsed":13}
+[debug] [2026-03-19T21:19:42.450Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/932226498137/sites/stackflow-1/versions/512a06a0719c9131:populateFiles [none]
+[debug] [2026-03-19T21:19:42.450Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/932226498137/sites/stackflow-1/versions/512a06a0719c9131:populateFiles {"files":{"/sitemap.xml":"d4738d2bd4d353c060e705626a1ac1c3b4037fcb100c6f84d00dc72c3cd903ff","/signup.html":"5fc5ae3a26e604519f896a3c0acc209c9a3d70802ad61659557d653d00188c28","/robots.txt":"9578cf9b0e91b07822e98611a9b21a94ab10471538c7e0cffa7b297a619d55c8","/login.html":"901d518f4d30c2ea45902c1ee71188a202b19a26683dcb6d1f44d0c0a6f866de","/favicon.ico":"72e66c13513f59f8fac681f4be97a8259fd13c4d9d09dfd8e9866cc617e65812","/404.html":"41d1e074106979fb6591ec6953bfe5ace2788be22f0ed4189bd54905ebb5b44d","/StackAI/__pycache__/chatbot.cpython-313.pyc":"1a1ed88314d87d54fa0d3b63c860b327a6ca90d9e15191d21e8a66b46bb3579a","/StackAI/utils/utilinit.py":"46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e","/StackAI/models/init.py":"46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e","/scripts/firestore.indexes.json":"b191ac1f31695c5e6e3b1a92ff427b0a19f2cc89ef54f82805f7443eff253f43","/scripts/firebasesdk.js":"6448d4680246b46c261dd86af3e233779e3e0d6d5ff61df9b8380ea8863d7e03","/scripts/check_root.js":"470933ff31ea96c11aa5237dc6953657407f5768568e74d2463cf1f524d22aba","/scripts/aapl.json":"ab7b9f38f84d2a2ec07c5d461760a61d16a207a5915eb21b7bc66cea342c6109","/publicstyles/style.css":"3c51c8e76a841393870ff8434c5864559938547e3ca967c337ccee2681f16532","/publicstyles/signup.css":"a6e6ba5ee13a77a081f790b4b3104175e11c7b07be20833c43065b9ae85c06a9","/publicstyles/login.css":"859df5d99e6fb2f63752dedbce676528ee44c6ac0d062fb304bdbe16cda3f55c","/publicstyles/application.css":"156ffba89fcfc94d38c49408ce0dc478c20339b1eff631f816c5ad77be9c3f5e","/publicscripts/signup.js":"6278f6b0cada6231f3fb11f010cdbcd908f6a2a6cd6ff2175a257fe4e89c281e","/publicscripts/login.js":"172e49dc0df2cde370f8e1ddf235c24b436325adcb6fb5aaa430ccb08e69c12f","/publicscripts/index.js":"7f66d16f99bb4b2c8534dbf780174988ba20dd63e8685dde0f4a835e41806d4a","/publicscripts/eastereggs.txt":"c09c76ed821bb2f27b2eed7e7bc698c5e3e1cd648b0d5bd5b85cbab780a40841","/index.html":"71941d4c9ee11c231bdc09843f64e03b83125edd0a812ea3731dabbce2cb4ab0","/publicscripts/gemini.js":"85bf39ba934cf67369d00c7dbf15a03a51d97ccb0c7577051941769d9c485430","/app.html":"294da2843a7a06b85ec4328e7e1ea38b50dfeb7355334fa27ac465196773d96e","/publicscripts/application.js":"3c6a15e30ce187d85c90edd6d49b855f5a59dd29c4dcd4451bc3647313916063","/publicscripts/stockapi.js":"34a54a83fb6eb3e9405e0a5f21bef63383fd058b402fcc2418501cd67c41fdf0","/publicscripts/chartjs-chart-financial.min.js":"6bee6380eab33009f2ff4b92e6e0db225f5370f93d64a0201eb4343cb21ff966"}}
+[debug] [2026-03-19T21:19:42.899Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/932226498137/sites/stackflow-1/versions/512a06a0719c9131:populateFiles 200
+[debug] [2026-03-19T21:19:42.899Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/932226498137/sites/stackflow-1/versions/512a06a0719c9131:populateFiles {"uploadRequiredHashes":["85bf39ba934cf67369d00c7dbf15a03a51d97ccb0c7577051941769d9c485430","294da2843a7a06b85ec4328e7e1ea38b50dfeb7355334fa27ac465196773d96e","3c6a15e30ce187d85c90edd6d49b855f5a59dd29c4dcd4451bc3647313916063","6bee6380eab33009f2ff4b92e6e0db225f5370f93d64a0201eb4343cb21ff966","71941d4c9ee11c231bdc09843f64e03b83125edd0a812ea3731dabbce2cb4ab0","34a54a83fb6eb3e9405e0a5f21bef63383fd058b402fcc2418501cd67c41fdf0"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files"}
+[debug] [2026-03-19T21:19:42.899Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.899Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.899Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.899Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:42.900Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/85bf39ba934cf67369d00c7dbf15a03a51d97ccb0c7577051941769d9c485430 [none]
+[debug] [2026-03-19T21:19:42.900Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/85bf39ba934cf67369d00c7dbf15a03a51d97ccb0c7577051941769d9c485430 [stream]
+[debug] [2026-03-19T21:19:42.901Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/294da2843a7a06b85ec4328e7e1ea38b50dfeb7355334fa27ac465196773d96e [none]
+[debug] [2026-03-19T21:19:42.901Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/294da2843a7a06b85ec4328e7e1ea38b50dfeb7355334fa27ac465196773d96e [stream]
+[debug] [2026-03-19T21:19:42.902Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/3c6a15e30ce187d85c90edd6d49b855f5a59dd29c4dcd4451bc3647313916063 [none]
+[debug] [2026-03-19T21:19:42.902Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/3c6a15e30ce187d85c90edd6d49b855f5a59dd29c4dcd4451bc3647313916063 [stream]
+[debug] [2026-03-19T21:19:42.903Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/6bee6380eab33009f2ff4b92e6e0db225f5370f93d64a0201eb4343cb21ff966 [none]
+[debug] [2026-03-19T21:19:42.903Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/6bee6380eab33009f2ff4b92e6e0db225f5370f93d64a0201eb4343cb21ff966 [stream]
+[debug] [2026-03-19T21:19:42.903Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/71941d4c9ee11c231bdc09843f64e03b83125edd0a812ea3731dabbce2cb4ab0 [none]
+[debug] [2026-03-19T21:19:42.904Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/71941d4c9ee11c231bdc09843f64e03b83125edd0a812ea3731dabbce2cb4ab0 [stream]
+[debug] [2026-03-19T21:19:42.904Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/34a54a83fb6eb3e9405e0a5f21bef63383fd058b402fcc2418501cd67c41fdf0 [none]
+[debug] [2026-03-19T21:19:42.904Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/34a54a83fb6eb3e9405e0a5f21bef63383fd058b402fcc2418501cd67c41fdf0 [stream]
+[debug] [2026-03-19T21:19:42.905Z] [hosting][populate queue][FINAL] {"max":451,"min":451,"avg":451,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":457}
+[debug] [2026-03-19T21:19:42.905Z] [hosting] uploads queued: 6
+[debug] [2026-03-19T21:19:43.657Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/6bee6380eab33009f2ff4b92e6e0db225f5370f93d64a0201eb4343cb21ff966 200
+[debug] [2026-03-19T21:19:43.657Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/6bee6380eab33009f2ff4b92e6e0db225f5370f93d64a0201eb4343cb21ff966 [stream]
+[debug] [2026-03-19T21:19:43.708Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/85bf39ba934cf67369d00c7dbf15a03a51d97ccb0c7577051941769d9c485430 200
+[debug] [2026-03-19T21:19:43.708Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/85bf39ba934cf67369d00c7dbf15a03a51d97ccb0c7577051941769d9c485430 [stream]
+[debug] [2026-03-19T21:19:43.825Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/294da2843a7a06b85ec4328e7e1ea38b50dfeb7355334fa27ac465196773d96e 200
+[debug] [2026-03-19T21:19:43.825Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/294da2843a7a06b85ec4328e7e1ea38b50dfeb7355334fa27ac465196773d96e [stream]
+[debug] [2026-03-19T21:19:43.866Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/3c6a15e30ce187d85c90edd6d49b855f5a59dd29c4dcd4451bc3647313916063 200
+[debug] [2026-03-19T21:19:43.866Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/3c6a15e30ce187d85c90edd6d49b855f5a59dd29c4dcd4451bc3647313916063 [stream]
+[debug] [2026-03-19T21:19:43.890Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/34a54a83fb6eb3e9405e0a5f21bef63383fd058b402fcc2418501cd67c41fdf0 200
+[debug] [2026-03-19T21:19:43.890Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/34a54a83fb6eb3e9405e0a5f21bef63383fd058b402fcc2418501cd67c41fdf0 [stream]
+[debug] [2026-03-19T21:19:44.036Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/71941d4c9ee11c231bdc09843f64e03b83125edd0a812ea3731dabbce2cb4ab0 200
+[debug] [2026-03-19T21:19:44.036Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/stackflow-1/versions/512a06a0719c9131/files/71941d4c9ee11c231bdc09843f64e03b83125edd0a812ea3731dabbce2cb4ab0 [stream]
+[debug] [2026-03-19T21:19:44.036Z] [hosting][upload queue][FINAL] {"max":1136,"min":757,"avg":930.8333333333334,"active":0,"complete":6,"success":6,"errored":0,"retried":0,"total":6,"elapsed":1137}
+[info] +  hosting[stackflow-1]: file upload complete 
+[debug] [2026-03-19T21:19:44.039Z] [hosting] deploy completed after 1627ms
+[debug] [2026-03-19T21:19:44.040Z] [
+  {
+    "config": {
+      "public": "public",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "site": "stackflow-1"
+    },
+    "version": "projects/932226498137/sites/stackflow-1/versions/512a06a0719c9131"
+  }
+]
+[info] i  hosting[stackflow-1]: finalizing version... 
+[debug] [2026-03-19T21:19:44.045Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:44.045Z] Checked if tokens are valid: true, expires at: 1773958779525
+[debug] [2026-03-19T21:19:44.045Z] >>> [apiv2][query] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stackflow-1/versions/512a06a0719c9131 updateMask=status%2Cconfig
+[debug] [2026-03-19T21:19:44.045Z] >>> [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stackflow-1/versions/512a06a0719c9131 {"status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]}}

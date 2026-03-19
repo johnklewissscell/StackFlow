@@ -3,7 +3,6 @@
   <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <meta
     http-equiv="Content-Security-Policy"
     content="
@@ -11,7 +10,7 @@
       script-src 'self' https://cdn.jsdelivr.net https://s3.tradingview.com 'unsafe-inline';
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
-      connect-src 'self' https://finnhub.io https://api.allorigins.win https://cdn.jsdelivr.net;
+      connect-src 'self' https://finnhub.io https://api.codetabs.com https://api.allorigins.win https://cdn.jsdelivr.net;
       img-src 'self' data: blob:;
       frame-src https://www.tradingview.com;
       base-uri 'self';
@@ -19,20 +18,13 @@
       upgrade-insecure-requests;
     "
   />
-
   <title>StackFlow - Stock Simulator</title>
-
   <link rel="stylesheet" href="publicstyles/application.css" />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-  />
-
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/date-fns@2.27.0/dist/date-fns.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
-
   <script type="module" src="publicscripts/application.js" defer></script>
 </head>
 
