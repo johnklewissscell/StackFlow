@@ -1,59 +1,46 @@
-const API_KEY = "SE35V6BRI6YHQ6TJ";
-const BASE_URL = "https://www.alphavantage.co/query";
-
-async function fetchJSON(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Network error");
-  return await res.json();
-}
+const FINNHUB_KEY = "d6u59v1r01qp1k9ba7p0d6u59v1r01qp1k9ba7pg";
 
 export async function getStockPrice(symbol) {
   try {
-    const res = await fetch(`/api/alpha?symbol=${symbol}`);
-    if (!res.ok) return null;
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol.toUpperCase()}&token=${FINNHUB_KEY}`);
     const data = await res.json();
-    return data.price || null;
-  } catch {
-    return null;
-  }
+    return data.c ? parseFloat(data.c) : null;
+  } catch (e) { return null; }
 }
 
 export async function getCompanyName(symbol) {
   try {
-    const res = await fetch(`/api/alpha?symbol=${symbol}`);
-    if (!res.ok) return symbol;
+    const res = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol.toUpperCase()}&token=${FINNHUB_KEY}`);
     const data = await res.json();
-    return data.companyName ? `${data.companyName} (${symbol})` : symbol;
-  } catch {
-    return symbol;
-  }
+    return data.name || symbol;
+  } catch (e) { return symbol; }
 }
 
 export async function getHistoricalData(symbol, range = "1M") {
-  const functionType = "TIME_SERIES_DAILY_ADJUSTED";
-  const outputSize = range === "5Y" ? "full" : "compact";
-  const url = `${BASE_URL}?function=${functionType}&symbol=${symbol}&outputsize=${outputSize}&apikey=${API_KEY}`;
-  const data = await fetchJSON(url);
-  const timeSeries = data["Time Series (Daily)"];
-  if (!timeSeries) return [];
+  try {
+    const ticker = symbol.toUpperCase();
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${range.toLowerCase()}&interval=1d`;
+    
+    // Using AllOrigins proxy to bypass CORS
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
+    
+    const response = await fetch(proxyUrl);
+    const proxyData = await response.json();
+    const data = JSON.parse(proxyData.contents);
+    
+    const result = data.chart.result[0];
+    const timestamps = result.timestamp;
+    const quotes = result.indicators.quote[0];
 
-  let dates = Object.keys(timeSeries).sort((a, b) => new Date(a) - new Date(b));
-  const now = new Date();
-  let cutoff;
-  switch (range) {
-    case "1D": cutoff = new Date(now.getTime() - 24 * 3600 * 1000); break;
-    case "1M": cutoff = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()); break;
-    case "1Y": cutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()); break;
-    case "5Y": cutoff = new Date(now.getFullYear() - 5, now.getMonth(), now.getDate()); break;
-    default: cutoff = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    return timestamps.map((time, i) => ({
+      t: new Date(time * 1000),
+      o: quotes.open[i],
+      h: quotes.high[i],
+      l: quotes.low[i],
+      c: quotes.close[i],
+    })).filter(item => item.c !== null);
+  } catch (e) {
+    console.error("Historical fetch failed", e);
+    return [];
   }
-  dates = dates.filter(d => new Date(d) >= cutoff);
-
-  return dates.map(d => ({
-    t: d,
-    o: parseFloat(timeSeries[d]["1. open"]),
-    h: parseFloat(timeSeries[d]["2. high"]),
-    l: parseFloat(timeSeries[d]["3. low"]),
-    c: parseFloat(timeSeries[d]["4. close"])
-  }));
 }
