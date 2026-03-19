@@ -20,8 +20,17 @@ export async function getCompanyName(symbol) {
 
 export async function getHistoricalData(symbol, range = "1M") {
   const ticker = symbol.toUpperCase();
-  const cacheKey = `${ticker}-${range}`;
+  const cacheKey = `stock_data_${ticker}_${range}`;
+  
   if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const saved = localStorage.getItem(cacheKey);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (Date.now() - parsed.time < 300000) {
+      return parsed.data;
+    }
+  }
 
   if (currentAbortController) currentAbortController.abort();
   currentAbortController = new AbortController();
@@ -56,6 +65,8 @@ export async function getHistoricalData(symbol, range = "1M") {
     }).filter(item => item !== null);
 
     cache.set(cacheKey, formatted);
+    localStorage.setItem(cacheKey, JSON.stringify({time: Date.now(), data: formatted}));
+    
     return formatted;
   } catch (e) {
     if (e.name === 'AbortError') return null;
