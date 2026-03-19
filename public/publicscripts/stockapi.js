@@ -26,7 +26,7 @@ export async function getHistoricalData(symbol, range = "1M") {
   const ticker = symbol.toUpperCase();
   const cacheKey = `stock_data_${ticker}_${range}`;
   const saved = localStorage.getItem(cacheKey);
-  
+
   if (saved) {
     const parsed = JSON.parse(saved);
     if (Date.now() - parsed.time < 300000) return parsed.data;
@@ -40,37 +40,31 @@ export async function getHistoricalData(symbol, range = "1M") {
   const interval = range === "1D" ? "15m" : "1d";
   const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
 
-  const fetchFromProxy = async (proxyUrl) => {
+  const fetchFromProxy = async (proxyUrl, isWrapped) => {
     const response = await fetch(proxyUrl, { signal: currentAbortController.signal });
+    if (!response.ok) throw new Error("Proxy Error");
     const rawData = await response.json();
-    let data = rawData.contents ? JSON.parse(rawData.contents) : rawData;
+    const data = isWrapped ? JSON.parse(rawData.contents) : rawData;
 
-    if (!data.chart || !data.chart.result) throw new Error("Invalid data");
-    
+    if (!data.chart || !data.chart.result) throw new Error("Invalid format");
     const result = data.chart.result[0];
-    if (!result.timestamp) throw new Error("No timestamps");
+    if (!result.timestamp) throw new Error("No data");
 
     return result.timestamp.map((time, i) => {
       const q = result.indicators.quote[0];
       if (!q.close || q.close[i] === null) return null;
-      return {
-        x: time * 1000,
-        o: q.open[i],
-        h: q.high[i],
-        l: q.low[i],
-        c: q.close[i]
-      };
+      return { x: time * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i] };
     }).filter(item => item !== null);
   };
 
-  const proxies = [
-    `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`
+  const proxyConfigs = [
+    { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, wrapped: false },
+    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, wrapped: true },
+    { url: `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, wrapped: false }
   ];
 
   try {
-    const formatted = await Promise.any(proxies.map(url => fetchFromProxy(url)));
-    
+    const formatted = await Promise.any(proxyConfigs.map(p => fetchFromProxy(p.url, p.wrapped)));
     if (formatted && formatted.length > 0) {
       localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: formatted }));
       return formatted;
@@ -78,6 +72,5 @@ export async function getHistoricalData(symbol, range = "1M") {
   } catch (e) {
     return [];
   }
-  
   return [];
 }
