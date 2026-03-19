@@ -28,11 +28,11 @@ export async function getHistoricalData(symbol, range = "1M") {
   const now = Math.floor(Date.now() / 1000);
   let from;
 
-  if (range === "1D") from = now - 60 * 60 * 24;
-  else if (range === "1M") from = now - 60 * 60 * 24 * 30;
-  else if (range === "1Y") from = now - 60 * 60 * 24 * 365;
-  else if (range === "5Y") from = now - 60 * 60 * 24 * 365 * 5;
-  else from = now - 60 * 60 * 24 * 30;
+  if (range === "1D") from = now - 86400;
+  else if (range === "1M") from = now - 86400 * 30;
+  else if (range === "1Y") from = now - 86400 * 365;
+  else if (range === "5Y") from = now - 86400 * 365 * 5;
+  else from = now - 86400 * 30;
 
   const resolution = range === "1D" ? "15" : "D";
 
@@ -52,7 +52,7 @@ export async function getHistoricalData(symbol, range = "1M") {
       l: data.l[i],
       c: data.c[i]
     }));
-  } catch (e) {
+  } catch {
     return [];
   }
 }
