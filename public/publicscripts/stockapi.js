@@ -24,41 +24,38 @@ export async function getCompanyName(symbol) {
 
 export async function getHistoricalData(symbol, range = "1M") {
   const ticker = symbol.toUpperCase();
-  const cacheKey = `stock_data_${ticker}_${range}`;
-  const saved = localStorage.getItem(cacheKey);
 
-  if (saved) {
-    const parsed = JSON.parse(saved);
-    if (Date.now() - parsed.time < 300000) return parsed.data;
+  const now = Math.floor(Date.now() / 1000);
+  let from;
+
+  if (range === "1D") from = now - 60 * 60 * 24;
+  else if (range === "1M") from = now - 60 * 60 * 24 * 30;
+  else if (range === "1Y") from = now - 60 * 60 * 24 * 365;
+  else if (range === "5Y") from = now - 60 * 60 * 24 * 365 * 5;
+  else from = now - 60 * 60 * 24 * 30;
+
+  const resolution = range === "1D" ? "15" : "D";
+
+  try {
+    const res = await fetch(
+      `https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=${resolution}&from=${from}&to=${now}&token=${FINNHUB_KEY}`
+    );
+
+    const data = await res.json();
+
+    if (data.s !== "ok") return [];
+
+    return data.t.map((time, i) => ({
+      x: time * 1000,
+      o: data.o[i],
+      h: data.h[i],
+      l: data.l[i],
+      c: data.c[i]
+    }));
+  } catch (e) {
+    return [];
   }
-
-  if (currentAbortController) currentAbortController.abort();
-  currentAbortController = new AbortController();
-
-  const rMap = { "1D": "1d", "1M": "1mo", "1Y": "1y", "5Y": "5y" };
-  const yRange = rMap[range] || "1mo";
-  const interval = range === "1D" ? "15m" : "1d";
-  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
-
-  const fetchFromProxy = async (proxyUrl, isWrapped) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    try {
-      const response = await fetch(proxyUrl, { signal: controller.signal });
-      if (!response.ok) throw new Error(response.status);
-      const rawData = await response.json();
-      const data = isWrapped ? JSON.parse(rawData.contents) : rawData;
-      if (!data.chart || !data.chart.result) throw new Error("Data");
-      const result = data.chart.result[0];
-      return result.timestamp.map((time, i) => {
-        const q = result.indicators.quote[0];
-        if (!q.close || q.close[i] === null) return null;
-        return { x: time * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i] };
-      }).filter(item => item !== null);
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  };
+}
 
   const proxyConfigs = [
     { url: `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, wrapped: true },
@@ -76,4 +73,3 @@ export async function getHistoricalData(symbol, range = "1M") {
     return [];
   }
   return [];
-}
