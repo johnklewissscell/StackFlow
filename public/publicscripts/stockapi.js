@@ -41,11 +41,12 @@ export async function getHistoricalData(symbol, range = "1M") {
     const interval = range === "1D" ? "15m" : "1d";
     
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
-
-    const response = await fetch(proxyUrl, { signal: currentAbortController.signal });
-    const json = await response.json();
-    const data = JSON.parse(json.contents);
+    
+    const response = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, { 
+      signal: currentAbortController.signal 
+    });
+    
+    const data = await response.json();
 
     if (!data.chart || !data.chart.result) return [];
     
