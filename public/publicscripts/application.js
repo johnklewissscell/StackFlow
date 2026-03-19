@@ -94,7 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = portEl.querySelector("tbody");
     const totalCost = shares * price;
     const row = document.createElement("tr");
-    
     row.innerHTML = `
       <td>${symbol}</td>
       <td>${shares}</td>
