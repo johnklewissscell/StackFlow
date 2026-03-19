@@ -41,13 +41,13 @@ export async function getHistoricalData(symbol, range = "1M") {
   const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
 
   const fetchFromProxy = async (proxyUrl, isWrapped) => {
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 10000));
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
     const request = (async () => {
       const response = await fetch(proxyUrl, { signal: currentAbortController.signal });
-      if (!response.ok) throw new Error("Proxy Error");
+      if (!response.ok) throw new Error("Fail");
       const rawData = await response.json();
       const data = isWrapped ? JSON.parse(rawData.contents) : rawData;
-      if (!data.chart || !data.chart.result) throw new Error("Invalid format");
+      if (!data.chart || !data.chart.result) throw new Error("Format");
       const result = data.chart.result[0];
       return result.timestamp.map((time, i) => {
         const q = result.indicators.quote[0];
@@ -55,7 +55,6 @@ export async function getHistoricalData(symbol, range = "1M") {
         return { x: time * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i] };
       }).filter(item => item !== null);
     })();
-
     return Promise.race([request, timeout]);
   };
 
