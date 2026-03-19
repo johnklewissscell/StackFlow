@@ -15,14 +15,19 @@ document.addEventListener("DOMContentLoaded", () => {
     currentSymbol = symbol;
     currentRange = range;
     const stockInfo = document.getElementById("stock-info");
-    
+    const container = document.getElementById("chart-container");
+    const canvas = document.getElementById("stockChart");
+
     const [price, name, candles] = await Promise.all([
       getStockPrice(symbol),
       getCompanyName(symbol),
       getHistoricalData(symbol, range)
     ]);
 
-    if (!price) return alert("Ticker not found.");
+    if (!price || !candles || candles.length === 0) {
+      alert("Ticker data not found.");
+      return;
+    }
 
     const displayName = name && name !== symbol ? `${name} (${symbol})` : symbol;
     stockInfo.innerHTML = `
@@ -30,32 +35,33 @@ document.addEventListener("DOMContentLoaded", () => {
       <span style="color: #000; font-weight: 600;">Price: $${price.toFixed(2)}</span>
     `;
 
-    const container = document.getElementById("chart-container");
     container.style.display = "block";
-    const ctx = document.getElementById("stockChart").getContext("2d");
+    const ctx = canvas.getContext("2d");
 
     if (chart) chart.destroy();
 
-    const ds = {
-      label: displayName,
-      data: preferCandlestick ? candles : candles.map(d => ({ x: d.x, y: d.c })),
-      borderColor: "#203a43",
-      backgroundColor: "rgba(32, 58, 67, 0.1)",
-      fill: !preferCandlestick,
-      tension: 0,
-      pointRadius: 0
-    };
+    const isLine = !preferCandlestick || !Chart.registry.controllers.get('candlestick');
 
     chart = new Chart(ctx, {
-      type: preferCandlestick ? "candlestick" : "line",
-      data: { datasets: [ds] },
+      type: isLine ? "line" : "candlestick",
+      data: {
+        datasets: [{
+          label: displayName,
+          data: isLine ? candles.map(d => ({ x: d.x, y: d.c })) : candles,
+          borderColor: "#203a43",
+          backgroundColor: "rgba(32, 58, 67, 0.1)",
+          fill: isLine,
+          tension: 0,
+          pointRadius: 0
+        }]
+      },
       options: {
         animation: false,
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { 
-            type: "time", 
+          x: {
+            type: "time",
             time: { unit: range === "1D" ? "hour" : "day" },
             ticks: { color: "#000", maxTicksLimit: 10 }
           },
@@ -68,7 +74,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("get-price").addEventListener("click", () => {
     const symbol = document.getElementById("stock-symbol").value.trim().toUpperCase();
     if (symbol) {
-      preferCandlestick = false;
       updateStock(symbol, currentRange);
     }
   });
@@ -133,7 +138,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!price) price = symbol === "SECRETSAUCE" ? 0 : parseFloat(prompt("Price:"));
     
     const cost = shares * price;
-    if (cost > parseCurrency(portEl.querySelector(".portfolio-balance").innerText)) {
+    const currentBalance = parseCurrency(portEl.querySelector(".portfolio-balance").innerText);
+    
+    if (cost > currentBalance) {
       return alert("No cash");
     }
 
