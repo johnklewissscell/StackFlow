@@ -7,7 +7,9 @@ export async function getStockPrice(symbol) {
     const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol.toUpperCase()}&token=${FINNHUB_KEY}`);
     const data = await res.json();
     return data.c ? parseFloat(data.c) : null;
-  } catch (e) { return null; }
+  } catch (e) {
+    return null;
+  }
 }
 
 export async function getCompanyName(symbol) {
@@ -15,13 +17,14 @@ export async function getCompanyName(symbol) {
     const res = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol.toUpperCase()}&token=${FINNHUB_KEY}`);
     const data = await res.json();
     return data.name || symbol;
-  } catch (e) { return symbol; }
+  } catch (e) {
+    return symbol;
+  }
 }
 
 export async function getHistoricalData(symbol, range = "1M") {
   const ticker = symbol.toUpperCase();
   const cacheKey = `stock_data_${ticker}_${range}`;
-  
   const saved = localStorage.getItem(cacheKey);
   if (saved) {
     const parsed = JSON.parse(saved);
@@ -31,49 +34,47 @@ export async function getHistoricalData(symbol, range = "1M") {
   if (currentAbortController) currentAbortController.abort();
   currentAbortController = new AbortController();
 
-  try {
-    const rMap = { "1D": "1d", "1M": "1mo", "1Y": "1y", "5Y": "5y" };
-    const yRange = rMap[range] || "1mo";
-    const interval = range === "1D" ? "15m" : "1d";
-    
-    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
-    
-    const response = await fetch(proxyUrl, { 
-      signal: currentAbortController.signal 
-    });
-    
-    const wrapper = await response.json();
-    const data = JSON.parse(wrapper.contents);
+  const rMap = { "1D": "1d", "1M": "1mo", "1Y": "1y", "5Y": "5y" };
+  const yRange = rMap[range] || "1mo";
+  const interval = range === "1D" ? "15m" : "1d";
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
 
-    if (!data.chart || !data.chart.result) {
-      console.error("Yahoo Finance Error:", data);
-      return [];
+  const proxies = [
+    `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`
+  ];
+
+  for (const url of proxies) {
+    try {
+      const response = await fetch(url, { signal: currentAbortController.signal });
+      const rawData = await response.json();
+      let data = rawData.contents ? JSON.parse(rawData.contents) : rawData;
+
+      if (data.chart && data.chart.result) {
+        const result = data.chart.result[0];
+        if (!result.timestamp) continue;
+
+        const formatted = result.timestamp.map((time, i) => {
+          const q = result.indicators.quote[0];
+          if (!q.close || q.close[i] === null) return null;
+          return {
+            x: time * 1000,
+            o: q.open[i],
+            h: q.high[i],
+            l: q.low[i],
+            c: q.close[i]
+          };
+        }).filter(item => item !== null);
+
+        if (formatted.length > 0) {
+          localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: formatted }));
+          return formatted;
+        }
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') return [];
+      continue;
     }
-    
-    const result = data.chart.result[0];
-    if (!result.timestamp) return [];
-
-    const formatted = result.timestamp.map((time, i) => {
-      const q = result.indicators.quote[0];
-      if (q.close[i] === null || q.close[i] === undefined) return null;
-      return { 
-        x: time * 1000, 
-        o: q.open[i], 
-        h: q.high[i], 
-        l: q.low[i], 
-        c: q.close[i] 
-      };
-    }).filter(item => item !== null);
-
-    if (formatted.length > 0) {
-      localStorage.setItem(cacheKey, JSON.stringify({time: Date.now(), data: formatted}));
-    }
-    
-    return formatted;
-  } catch (e) {
-    if (e.name === 'AbortError') return [];
-    console.error("Historical Data Fetch Error:", e);
-    return [];
   }
+  return [];
 }
