@@ -41,26 +41,28 @@ export async function getHistoricalData(symbol, range = "1M") {
   const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
 
   const fetchFromProxy = async (proxyUrl, isWrapped) => {
-    const response = await fetch(proxyUrl, { signal: currentAbortController.signal });
-    if (!response.ok) throw new Error("Proxy Error");
-    const rawData = await response.json();
-    const data = isWrapped ? JSON.parse(rawData.contents) : rawData;
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 10000));
+    const request = (async () => {
+      const response = await fetch(proxyUrl, { signal: currentAbortController.signal });
+      if (!response.ok) throw new Error("Proxy Error");
+      const rawData = await response.json();
+      const data = isWrapped ? JSON.parse(rawData.contents) : rawData;
+      if (!data.chart || !data.chart.result) throw new Error("Invalid format");
+      const result = data.chart.result[0];
+      return result.timestamp.map((time, i) => {
+        const q = result.indicators.quote[0];
+        if (!q.close || q.close[i] === null) return null;
+        return { x: time * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i] };
+      }).filter(item => item !== null);
+    })();
 
-    if (!data.chart || !data.chart.result) throw new Error("Invalid format");
-    const result = data.chart.result[0];
-    if (!result.timestamp) throw new Error("No data");
-
-    return result.timestamp.map((time, i) => {
-      const q = result.indicators.quote[0];
-      if (!q.close || q.close[i] === null) return null;
-      return { x: time * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i] };
-    }).filter(item => item !== null);
+    return Promise.race([request, timeout]);
   };
 
   const proxyConfigs = [
+    { url: `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, wrapped: false },
     { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, wrapped: false },
-    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, wrapped: true },
-    { url: `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`, wrapped: false }
+    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`, wrapped: true }
   ];
 
   try {
