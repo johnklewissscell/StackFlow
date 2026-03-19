@@ -22,8 +22,6 @@ export async function getHistoricalData(symbol, range = "1M") {
   const ticker = symbol.toUpperCase();
   const cacheKey = `stock_data_${ticker}_${range}`;
   
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
-
   const saved = localStorage.getItem(cacheKey);
   if (saved) {
     const parsed = JSON.parse(saved);
@@ -39,26 +37,43 @@ export async function getHistoricalData(symbol, range = "1M") {
     const interval = range === "1D" ? "15m" : "1d";
     
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
     
-    const response = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`, { 
+    const response = await fetch(proxyUrl, { 
       signal: currentAbortController.signal 
     });
     
-    const data = await response.json();
+    const wrapper = await response.json();
+    const data = JSON.parse(wrapper.contents);
 
-    if (!data.chart || !data.chart.result) return [];
+    if (!data.chart || !data.chart.result) {
+      console.error("Yahoo Finance Error:", data);
+      return [];
+    }
     
     const result = data.chart.result[0];
+    if (!result.timestamp) return [];
+
     const formatted = result.timestamp.map((time, i) => {
       const q = result.indicators.quote[0];
-      if (!q.open || q.open[i] === null) return null;
-      return { x: time * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i] };
+      if (q.close[i] === null || q.close[i] === undefined) return null;
+      return { 
+        x: time * 1000, 
+        o: q.open[i], 
+        h: q.high[i], 
+        l: q.low[i], 
+        c: q.close[i] 
+      };
     }).filter(item => item !== null);
 
-    cache.set(cacheKey, formatted);
-    localStorage.setItem(cacheKey, JSON.stringify({time: Date.now(), data: formatted}));
+    if (formatted.length > 0) {
+      localStorage.setItem(cacheKey, JSON.stringify({time: Date.now(), data: formatted}));
+    }
+    
     return formatted;
   } catch (e) {
+    if (e.name === 'AbortError') return [];
+    console.error("Historical Data Fetch Error:", e);
     return [];
   }
 }
