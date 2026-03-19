@@ -40,19 +40,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (chart) chart.destroy();
 
-    const isLine = !preferCandlestick || !Chart.registry.controllers.get('candlestick');
+    const isLine = !preferCandlestick;
+    const chartData = isLine ? candles.map(d => ({ x: d.x, y: d.c })) : candles;
 
     chart = new Chart(ctx, {
       type: isLine ? "line" : "candlestick",
       data: {
         datasets: [{
           label: displayName,
-          data: isLine ? candles.map(d => ({ x: d.x, y: d.c })) : candles,
+          data: chartData,
           borderColor: "#203a43",
           backgroundColor: "rgba(32, 58, 67, 0.1)",
           fill: isLine,
-          tension: 0,
-          pointRadius: 0
+          tension: 0.1,
+          pointRadius: isLine ? 2 : 0,
+          borderWidth: 2
         }]
       },
       options: {
@@ -65,7 +67,10 @@ document.addEventListener("DOMContentLoaded", () => {
             time: { unit: range === "1D" ? "hour" : "day" },
             ticks: { color: "#000", maxTicksLimit: 10 }
           },
-          y: { ticks: { color: "#000" } }
+          y: { 
+            ticks: { color: "#000" },
+            beginAtZero: false 
+          }
         }
       }
     });
