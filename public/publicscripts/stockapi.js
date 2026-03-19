@@ -1,54 +1,59 @@
-// stockapi.js — ES module exports used by index.js
-// Exports:
-//   getStockPrice(symbol) -> number | null
-//   getHistoricalData(symbol, range) -> { timestamps: number[], prices: number[] } | null
+const API_KEY = "SE35V6BRI6YHQ6TJ";
+const BASE_URL = "https://www.alphavantage.co/query";
 
-// Proxy URL for CORS
-const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy to bypass restrictions
-
-async function fetchYahooChart(symbol, rangeParam, intervalParam) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${rangeParam}&interval=${intervalParam}`;
-  const resp = await fetch(proxyUrl + url); // Add proxyUrl to bypass CORS
-  if (!resp.ok) throw new Error(`Network error: ${resp.status}`);
-  const json = await resp.json();
-  if (!json.chart || !json.chart.result) return null;
-  return json.chart.result[0];
-}
-
-export async function getHistoricalData(symbol, range = '1M') {
-  try {
-    const map = {
-      '1D': { r: '1d', interval: '5m' },
-      '1M': { r: '1mo', interval: '1d' },
-      '1Y': { r: '1y', interval: '1d' },
-      '5Y': { r: '5y', interval: '1d' }
-    };
-    const cfg = map[range] || map['1M'];
-    const result = await fetchYahooChart(symbol, cfg.r, cfg.interval);
-    if (!result) return null;
-
-    const timestamps = result.timestamp || [];
-    const prices = (result.indicators && result.indicators.quote && result.indicators.quote[0].close) || [];
-    return { timestamps, prices };
-  } catch (err) {
-    console.error('getHistoricalData error:', err);
-    return null;
-  }
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Network error");
+  return await res.json();
 }
 
 export async function getStockPrice(symbol) {
   try {
-    // Use 1D range to get the latest intraday price if available
-    const data = await getHistoricalData(symbol, '1D');
-    if (!data || !data.prices || data.prices.length === 0) {
-      // Fall back to 1M range if no 1D data is available
-      const fallback = await getHistoricalData(symbol, '1M');
-      if (!fallback || !fallback.prices || fallback.prices.length === 0) return null;
-      return fallback.prices[fallback.prices.length - 1];
-    }
-    return data.prices[data.prices.length - 1];
-  } catch (err) {
-    console.error('getStockPrice error:', err);
+    const res = await fetch(`/api/alpha?symbol=${symbol}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.price || null;
+  } catch {
     return null;
   }
+}
+
+export async function getCompanyName(symbol) {
+  try {
+    const res = await fetch(`/api/alpha?symbol=${symbol}`);
+    if (!res.ok) return symbol;
+    const data = await res.json();
+    return data.companyName ? `${data.companyName} (${symbol})` : symbol;
+  } catch {
+    return symbol;
+  }
+}
+
+export async function getHistoricalData(symbol, range = "1M") {
+  const functionType = "TIME_SERIES_DAILY_ADJUSTED";
+  const outputSize = range === "5Y" ? "full" : "compact";
+  const url = `${BASE_URL}?function=${functionType}&symbol=${symbol}&outputsize=${outputSize}&apikey=${API_KEY}`;
+  const data = await fetchJSON(url);
+  const timeSeries = data["Time Series (Daily)"];
+  if (!timeSeries) return [];
+
+  let dates = Object.keys(timeSeries).sort((a, b) => new Date(a) - new Date(b));
+  const now = new Date();
+  let cutoff;
+  switch (range) {
+    case "1D": cutoff = new Date(now.getTime() - 24 * 3600 * 1000); break;
+    case "1M": cutoff = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()); break;
+    case "1Y": cutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()); break;
+    case "5Y": cutoff = new Date(now.getFullYear() - 5, now.getMonth(), now.getDate()); break;
+    default: cutoff = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  }
+  dates = dates.filter(d => new Date(d) >= cutoff);
+
+  return dates.map(d => ({
+    t: d,
+    o: parseFloat(timeSeries[d]["1. open"]),
+    h: parseFloat(timeSeries[d]["2. high"]),
+    l: parseFloat(timeSeries[d]["3. low"]),
+    c: parseFloat(timeSeries[d]["4. close"])
+  }));
 }

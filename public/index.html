@@ -1,34 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google Site Verification -->
     <meta name="google-site-verification" content="BnzZkg5U7xRgDnUwEUijJqT_gERNB0Sr-fgb37SkZAI" />
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- SEO Meta Tags -->
     <title>StackFlow - Stock Market Simulator With AI Assistance</title>
     <meta name="description" content="StackFlow is an AI-powered stock market simulator built to help beginners learn trading with realistic market data and intelligent guidance.">
     <meta name="keywords" content="StackFlow, stock simulator, AI stock app, investing for beginners, trading simulator, market simulation, stock learning tools">
     <meta name="robots" content="index, follow">
 
-    <!-- Canonical URL -->
     <link rel="canonical" href="https://stackflow.pages.dev/">
 
-    <!-- Open Graph (Social Sharing) -->
     <meta property="og:title" content="StackFlow – AI Stock Market Simulator">
     <meta property="og:description" content="Learn stock trading through realistic simulations powered by AI insights. Perfect for beginners and learners.">
     <meta property="og:url" content="https://stackflow.pages.dev/">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://stackflow.pages.dev/favicon.ico">
 
-    <!-- Favicon -->
     <link rel="icon" href="/favicon.ico">
 
-    <!-- Styles & Scripts -->
-    <link rel="stylesheet" href="/publicstyles/style.css">
-    <script src="/publicscripts/index.js" defer></script>
+    <link rel="stylesheet" href="publicstyles/style.css">
+    <script src="publicscripts/index.js" defer></script>
 </head>
 <body>
     <header class="navbar">
@@ -106,7 +100,6 @@
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQKtUxuZstQy_KbE63cHf85xBkUQKFqDeMBYw&s" alt="Image 3">
     </section>
 
-    <!-- Contact Section -->
     <section class="contacts" id="contacts">
         <h2>Contact Us</h2>
         <p>Have questions, feedback, or suggestions? We'd love to hear from you! Reach out to us at:</p>
@@ -148,38 +141,33 @@
             const formInputs = form.querySelectorAll(".form-input");
             const submitButton = form.querySelector(".form-button");
 
-            // Handle form submission
             form.addEventListener("submit", function (e) {
                 e.preventDefault();
 
-                // Basic validation: Check if all fields are filled
                 let isValid = true;
                 formInputs.forEach(input => {
                     if (input.value.trim() === "") {
                         isValid = false;
-                        input.style.borderColor = "#ff4747"; // Highlight invalid inputs in red
+                        input.style.borderColor = "#ff4747";
                     } else {
-                        input.style.borderColor = "#fff"; // Reset border color
+                        input.style.borderColor = "#fff";
                     }
                 });
 
                 if (isValid) {
-                    // Simulate successful form submission (replace with actual AJAX if needed)
                     form.innerHTML = `<h3>Thank you for reaching out! We will get back to you soon.</h3>`;
                     form.style.textAlign = "center";
                     form.style.padding = "2rem 1rem";
                     form.style.backgroundColor = "rgba(0, 180, 216, 0.2)";
-                    submitButton.disabled = true; // Disable the submit button after sending
+                    submitButton.disabled = true;
                 } else {
-                    // Display an error message if the form is invalid
                     alert("Please fill out all fields.");
                 }
             });
 
-            // Optional: You can also clear the form input on focus if needed
             formInputs.forEach(input => {
                 input.addEventListener("focus", function () {
-                    input.style.borderColor = "#00b4d8"; // Highlight the input on focus
+                    input.style.borderColor = "#00b4d8";
                 });
             });
         });
