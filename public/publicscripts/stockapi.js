@@ -26,6 +26,7 @@ export async function getHistoricalData(symbol, range = "1M") {
   const ticker = symbol.toUpperCase();
   const cacheKey = `stock_data_${ticker}_${range}`;
   const saved = localStorage.getItem(cacheKey);
+  
   if (saved) {
     const parsed = JSON.parse(saved);
     if (Date.now() - parsed.time < 300000) return parsed.data;
@@ -39,42 +40,44 @@ export async function getHistoricalData(symbol, range = "1M") {
   const interval = range === "1D" ? "15m" : "1d";
   const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${yRange}&interval=${interval}`;
 
+  const fetchFromProxy = async (proxyUrl) => {
+    const response = await fetch(proxyUrl, { signal: currentAbortController.signal });
+    const rawData = await response.json();
+    let data = rawData.contents ? JSON.parse(rawData.contents) : rawData;
+
+    if (!data.chart || !data.chart.result) throw new Error("Invalid data");
+    
+    const result = data.chart.result[0];
+    if (!result.timestamp) throw new Error("No timestamps");
+
+    return result.timestamp.map((time, i) => {
+      const q = result.indicators.quote[0];
+      if (!q.close || q.close[i] === null) return null;
+      return {
+        x: time * 1000,
+        o: q.open[i],
+        h: q.high[i],
+        l: q.low[i],
+        c: q.close[i]
+      };
+    }).filter(item => item !== null);
+  };
+
   const proxies = [
     `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`,
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`
   ];
 
-  for (const url of proxies) {
-    try {
-      const response = await fetch(url, { signal: currentAbortController.signal });
-      const rawData = await response.json();
-      let data = rawData.contents ? JSON.parse(rawData.contents) : rawData;
-
-      if (data.chart && data.chart.result) {
-        const result = data.chart.result[0];
-        if (!result.timestamp) continue;
-
-        const formatted = result.timestamp.map((time, i) => {
-          const q = result.indicators.quote[0];
-          if (!q.close || q.close[i] === null) return null;
-          return {
-            x: time * 1000,
-            o: q.open[i],
-            h: q.high[i],
-            l: q.low[i],
-            c: q.close[i]
-          };
-        }).filter(item => item !== null);
-
-        if (formatted.length > 0) {
-          localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: formatted }));
-          return formatted;
-        }
-      }
-    } catch (e) {
-      if (e.name === 'AbortError') return [];
-      continue;
+  try {
+    const formatted = await Promise.any(proxies.map(url => fetchFromProxy(url)));
+    
+    if (formatted && formatted.length > 0) {
+      localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), data: formatted }));
+      return formatted;
     }
+  } catch (e) {
+    return [];
   }
+  
   return [];
 }
