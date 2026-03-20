@@ -1,4 +1,4 @@
-const FINNHUB_KEY = "d6u59v1r01qp1k9ba7p0d6u59v1r01qp1k9ba7pg";
+const FINNHUB_KEY = "d6uak2hr01qp1k9bru30d6uak2hr01qp1k9bru3g";
 const cache = new Map();
 let currentAbortController = null;
 
