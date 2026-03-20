@@ -244,3 +244,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentSymbol) updateStock(currentSymbol, currentRange);
   };
 });
+
+setInterval(() => {
+  const currentSymbol = document.getElementById("stock-symbol").value.trim().toUpperCase();
+  if (currentSymbol) {
+    updateStock(currentSymbol, currentRange);
+    console.log("Auto-refreshing simulate market data...");
+  }
+}, 5000);
