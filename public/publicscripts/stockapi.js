@@ -49,32 +49,30 @@ export async function getCompanyName(symbol) {
 export async function getHistoricalData(symbol, range = "1M") {
   const now = Date.now();
   let data = [];
-  let points;
-  let intervalGap;
+  let points, intervalGap;
 
-  if (range === "1D") {
-    points = 40;
-    intervalGap = 30000;
-  } else if (range === "1M") {
-    points = 30;
-    intervalGap = 86400000;
-  } else if (range === "1Y") {
-    points = 100;
-    intervalGap = 315360000;
-  } else {
-    points = 200;
-    intervalGap = 788400000;
-  }
+  if (range === "1D") { points = 40; intervalGap = 30000; } 
+  else if (range === "1M") { points = 30; intervalGap = 86400000; } 
+  else if (range === "1Y") { points = 100; intervalGap = 315360000; } 
+  else { points = 200; intervalGap = 788400000; }
 
   for (let i = points; i >= 0; i--) {
     const t = now - (i * intervalGap);
     const p = getPriceAtTime(symbol, t);
+    
+    // Create some variance so the candles have shapes
+    const volatility = p * 0.01; 
+    const open = p + (seededRandom(t) * volatility - (volatility / 2));
+    const close = p + (seededRandom(t + 1) * volatility - (volatility / 2));
+    const high = Math.max(open, close) + (seededRandom(t + 2) * (volatility / 0.5));
+    const low = Math.min(open, close) - (seededRandom(t + 3) * (volatility / 0.5));
+
     data.push({
       x: t,
-      o: p,
-      h: p + 1,
-      l: p - 1,
-      c: p
+      o: open,
+      h: high,
+      l: Math.max(0.01, low),
+      c: close
     });
   }
   return data;
