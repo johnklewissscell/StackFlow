@@ -1,9 +1,13 @@
 const cache = new Map();
 
+function buildProxyUrl(url) {
+  return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+}
+
 export async function getStockPrice(symbol) {
   try {
     const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
-    const proxy = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const proxy = buildProxyUrl(url);
     const res = await fetch(proxy);
     if (!res.ok) return null;
     const data = await res.json();
@@ -17,7 +21,7 @@ export async function getStockPrice(symbol) {
 export async function getCompanyName(symbol) {
   try {
     const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`;
-    const proxy = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const proxy = buildProxyUrl(url);
     const res = await fetch(proxy);
     if (!res.ok) return symbol;
     const data = await res.json();
@@ -41,13 +45,13 @@ export async function getHistoricalData(symbol, range = "1M") {
   else from = today - 86400 * 30;
 
   const url = `https://query1.finance.yahoo.com/v7/finance/download/${ticker}?period1=${from}&period2=${today}&interval=1d&events=history`;
-  const proxy = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  const proxy = buildProxyUrl(url);
 
   try {
     const res = await fetch(proxy);
     if (!res.ok) return [];
-    const csv = await res.text();
-    const lines = csv.split("\n").slice(1);
+    const text = await res.text();
+    const lines = text.split("\n").slice(1);
     const data = lines
       .map(line => {
         const [date, open, high, low, close] = line.split(",");
