@@ -1,8 +1,6 @@
-// Change this line
 const BASE = "https://api.allorigins.win/get?url=";
 
 function proxy(url) {
-  // AllOrigins needs the URL encoded and returns a JSON object with a 'contents' field
   return `${BASE}${encodeURIComponent(url)}`;
 }
 
@@ -14,8 +12,8 @@ export async function getStockPrice(symbol) {
     const res = await fetch(proxy(url));
     if (!res.ok) return null;
     
-    const json = await res.json(); // AllOrigins returns JSON
-    const text = json.contents;    // The actual CSV is in the 'contents' property
+    const json = await res.json();
+    const text = json.contents; 
     
     const lines = text.trim().split("\n").slice(1);
     const lastLine = lines[lines.length - 1];
@@ -64,4 +62,8 @@ export async function getHistoricalData(symbol, range = "1M") {
     console.error("Historical fetch error:", err);
     return [];
   }
+}
+
+export async function getCompanyName(symbol) {
+  return symbol;
 }
