@@ -246,11 +246,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 setInterval(() => {
-  const symbolInput = document.getElementById("stock-symbol");
-  const symbol = symbolInput ? symbolInput.value.trim().toUpperCase() : null;
-  
-  if (symbol && currentSymbol === symbol) {
-    updateStock(symbol, currentRange);
-    console.log("Market Tick: Chart updated with persistent data.");
+  if (currentSymbol) {
+    updateStock(currentSymbol, currentRange);
+    console.log(`Auto-syncing ${currentSymbol} with live market...`);
   }
 }, 30000);

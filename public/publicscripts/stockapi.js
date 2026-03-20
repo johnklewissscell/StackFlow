@@ -21,14 +21,21 @@ function isMarketOpen() {
   return totalMinutes >= 570 && totalMinutes < 960;
 }
 
-function initializeHistory(symbol) {
+function ensureHistoryExists(symbol) {
   if (!marketHistory[symbol]) {
     let price = STARTING_PRICES[symbol] || 100;
     let data = [];
     const now = Date.now();
-    for (let i = 100; i >= 0; i--) {
-      price += (Math.random() * 10) - 5;
-      data.push({ x: now - (i * 30000), o: price, h: price + 2, l: price - 2, c: price });
+    for (let i = 60; i >= 0; i--) {
+      const change = (Math.random() * 10) - 5;
+      price += change;
+      data.push({
+        x: now - (i * 30000),
+        o: price - (change / 2),
+        h: price + Math.abs(change),
+        l: price - Math.abs(change),
+        c: price
+      });
     }
     marketHistory[symbol] = data;
     liveMarket[symbol] = price;
@@ -36,40 +43,38 @@ function initializeHistory(symbol) {
 }
 
 export async function getStockPrice(symbol) {
-  if (!liveMarket[symbol]) initializeHistory(symbol);
+  ensureHistoryExists(symbol);
   return liveMarket[symbol];
+}
+
+export function getCompanyName(symbol) {
+  return symbol;
 }
 
 export function updateMarketPrices() {
   if (!isMarketOpen()) return;
 
-  Object.keys(STARTING_PRICES).forEach(symbol => {
-    if (!liveMarket[symbol]) initializeHistory(symbol);
-
+  Object.keys(marketHistory).forEach(symbol => {
     const change = (Math.random() * 10) - 5;
     liveMarket[symbol] += change;
     if (liveMarket[symbol] < 0.01) liveMarket[symbol] = 0.01;
 
     const newPoint = {
       x: Date.now(),
-      o: liveMarket[symbol] - (change / 2),
-      h: Math.max(liveMarket[symbol], liveMarket[symbol] - change),
-      l: Math.min(liveMarket[symbol], liveMarket[symbol] - change),
+      o: liveMarket[symbol] - change,
+      h: Math.max(liveMarket[symbol], liveMarket[symbol] - change) + 1,
+      l: Math.min(liveMarket[symbol], liveMarket[symbol] - change) - 1,
       c: liveMarket[symbol]
     };
-    marketHistory[symbol].push(newPoint);
     
-    if (marketHistory[symbol].length > 200) marketHistory[symbol].shift();
+    marketHistory[symbol].push(newPoint);
+    if (marketHistory[symbol].length > 100) marketHistory[symbol].shift();
   });
 }
 
 setInterval(updateMarketPrices, 30000);
 
 export async function getHistoricalData(symbol) {
-  if (!marketHistory[symbol]) initializeHistory(symbol);
+  ensureHistoryExists(symbol);
   return marketHistory[symbol];
-}
-
-export async function getCompanyName(symbol) {
-    return symbol; 
 }
