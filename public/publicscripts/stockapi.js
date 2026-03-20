@@ -25,17 +25,20 @@ function getPriceAtTime(symbol, timestamp) {
     symbolSeed += symbol.charCodeAt(i);
   }
   
-  const drift = (seededRandom(symbolSeed) - 0.45) * 2.5; 
-  const volatility = (symbolSeed % 10) / 3 + 0.5;
-  let price = (symbolSeed % 200) + 100;
+  const trendDirection = (seededRandom(symbolSeed) - 0.5) * 10; 
+  const volatility = (symbolSeed % 10) / 5 + 0.2;
   
-  const iterations = Math.floor(timestamp / 3600000); 
-  const startPoint = iterations - 500;
+  let price = (symbolSeed % 400) + 100;
+  
+  const intervalIndex = Math.floor(timestamp / 30000);
+  const historyWindow = 1000;
+  const startPoint = intervalIndex - historyWindow;
 
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < historyWindow; i++) {
     const stepSeed = symbolSeed + (startPoint + i);
-    const change = (seededRandom(stepSeed) - 0.5) * 10 * volatility;
-    price += (change + drift);
+    const randomNoise = (seededRandom(stepSeed) - 0.5) * 2 * volatility;
+    
+    price += trendDirection + randomNoise;
   }
   
   return Math.max(0.01, price);
@@ -58,7 +61,7 @@ export async function getHistoricalData(symbol, range = "1M") {
 
   if (range === "1D") {
     points = 40;
-    intervalGap = 900000; 
+    intervalGap = 600000; 
   } else if (range === "1M") {
     points = 30;
     intervalGap = 86400000;
@@ -73,16 +76,16 @@ export async function getHistoricalData(symbol, range = "1M") {
   for (let i = points; i >= 0; i--) {
     const t = now - (i * intervalGap);
     const openPrice = getPriceAtTime(symbol, t);
-    const closePrice = getPriceAtTime(symbol, t + (intervalGap * 0.8));
+    const closePrice = getPriceAtTime(symbol, t + (intervalGap * 0.9));
     
-    const candleSeed = Math.floor(t / 1000);
-    const swing = openPrice * 0.02;
+    const candleSeed = Math.floor(t / 30000);
+    const wickRange = openPrice * 0.015;
 
     data.push({
       x: t,
       o: openPrice,
-      h: Math.max(openPrice, closePrice) + (seededRandom(candleSeed) * swing),
-      l: Math.min(openPrice, closePrice) - (seededRandom(candleSeed + 1) * swing),
+      h: Math.max(openPrice, closePrice) + (seededRandom(candleSeed) * wickRange),
+      l: Math.min(openPrice, closePrice) - (seededRandom(candleSeed + 1) * wickRange),
       c: closePrice
     });
   }
