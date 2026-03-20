@@ -1,14 +1,6 @@
 const liveMarket = {};
 const marketHistory = {};
 
-const STARTING_PRICES = {
-  "AAPL": 249.12,
-  "TSLA": 382.45,
-  "NVDA": 178.90,
-  "GME": 15.20,
-  "BTC": 72000.00
-};
-
 function isMarketOpen() {
   const now = new Date();
   const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
@@ -16,24 +8,34 @@ function isMarketOpen() {
   const day = etDate.getDay();
   const hour = etDate.getHours();
   const minute = etDate.getMinutes();
+  
   if (day === 0 || day === 6) return false;
   const totalMinutes = (hour * 60) + minute;
   return totalMinutes >= 570 && totalMinutes < 960;
 }
 
-function ensureHistoryExists(symbol) {
+function getDeterministicStartPrice(symbol) {
+  let hash = 0;
+  for (let i = 0; i < symbol.length; i++) {
+    hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash % 900) + 10;
+}
+
+function ensureStockExists(symbol) {
   if (!marketHistory[symbol]) {
-    let price = STARTING_PRICES[symbol] || 100;
+    let price = getDeterministicStartPrice(symbol);
     let data = [];
     const now = Date.now();
-    for (let i = 60; i >= 0; i--) {
+
+    for (let i = 100; i >= 0; i--) {
       const change = (Math.random() * 10) - 5;
       price += change;
       data.push({
         x: now - (i * 30000),
-        o: price - (change / 2),
-        h: price + Math.abs(change),
-        l: price - Math.abs(change),
+        o: price - change,
+        h: price + 2,
+        l: price - 2,
         c: price
       });
     }
@@ -43,15 +45,20 @@ function ensureHistoryExists(symbol) {
 }
 
 export async function getStockPrice(symbol) {
-  ensureHistoryExists(symbol);
+  ensureStockExists(symbol);
   return liveMarket[symbol];
 }
 
-export function getCompanyName(symbol) {
-  return symbol;
+export async function getCompanyName(symbol) {
+  return `${symbol} Asset`;
 }
 
-export function updateMarketPrices() {
+export async function getHistoricalData(symbol) {
+  ensureStockExists(symbol);
+  return marketHistory[symbol];
+}
+
+function tick() {
   if (!isMarketOpen()) return;
 
   Object.keys(marketHistory).forEach(symbol => {
@@ -62,19 +69,14 @@ export function updateMarketPrices() {
     const newPoint = {
       x: Date.now(),
       o: liveMarket[symbol] - change,
-      h: Math.max(liveMarket[symbol], liveMarket[symbol] - change) + 1,
-      l: Math.min(liveMarket[symbol], liveMarket[symbol] - change) - 1,
+      h: liveMarket[symbol] + 1,
+      l: liveMarket[symbol] - 1,
       c: liveMarket[symbol]
     };
     
     marketHistory[symbol].push(newPoint);
-    if (marketHistory[symbol].length > 100) marketHistory[symbol].shift();
+    if (marketHistory[symbol].length > 200) marketHistory[symbol].shift();
   });
 }
 
-setInterval(updateMarketPrices, 30000);
-
-export async function getHistoricalData(symbol) {
-  ensureHistoryExists(symbol);
-  return marketHistory[symbol];
-}
+setInterval(tick, 30000);

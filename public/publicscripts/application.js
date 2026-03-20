@@ -245,9 +245,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 });
 
-setInterval(() => {
+setInterval(async () => {
   if (currentSymbol) {
-    updateStock(currentSymbol, currentRange);
-    console.log(`Auto-syncing ${currentSymbol} with live market...`);
+    await updateStock(currentSymbol, currentRange);
   }
 }, 30000);
