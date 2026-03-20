@@ -251,8 +251,11 @@ setInterval(async () => {
   }
 }, 30000);
 
-document.getElementById("refresh-control").onclick = async () => {
-  if (currentSymbol) {
-    await updateStock(currentSymbol, currentRange);
-  }
-};
+document.querySelectorAll("#time-range button").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    currentRange = btn.getAttribute("data-range");
+    if (currentSymbol) {
+      await updateStock(currentSymbol, currentRange);
+    }
+  });
+});

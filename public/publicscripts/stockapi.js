@@ -27,12 +27,12 @@ function ensureStockExists(symbol) {
     let price = getDeterministicStartPrice(symbol);
     let data = [];
     const now = Date.now();
-
-    for (let i = 100; i >= 0; i--) {
+    
+    for (let i = 1825; i >= 0; i--) {
       const change = (Math.random() * 10) - 5;
       price += change;
       data.push({
-        x: now - (i * 30000),
+        x: now - (i * 86400000),
         o: price - change,
         h: price + 2,
         l: price - 2,
@@ -53,9 +53,20 @@ export async function getCompanyName(symbol) {
   return `${symbol} Asset`;
 }
 
-export async function getHistoricalData(symbol) {
+export async function getHistoricalData(symbol, range = "1M") {
   ensureStockExists(symbol);
-  return [...marketHistory[symbol]];
+  const allData = marketHistory[symbol];
+  
+  let pointsToReturn;
+  switch (range) {
+    case "1D": pointsToReturn = 20; break;
+    case "1M": pointsToReturn = 30; break;
+    case "1Y": pointsToReturn = 365; break;
+    case "5Y": pointsToReturn = 1825; break;
+    default: pointsToReturn = 30;
+  }
+  
+  return allData.slice(-pointsToReturn);
 }
 
 function tick() {
@@ -74,7 +85,7 @@ function tick() {
     };
     
     marketHistory[symbol].push(newPoint);
-    if (marketHistory[symbol].length > 200) marketHistory[symbol].shift();
+    marketHistory[symbol].shift(); 
   });
 }
 
