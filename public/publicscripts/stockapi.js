@@ -55,7 +55,7 @@ export async function getCompanyName(symbol) {
 
 export async function getHistoricalData(symbol) {
   ensureStockExists(symbol);
-  return marketHistory[symbol];
+  return [...marketHistory[symbol]];
 }
 
 function tick() {
@@ -64,8 +64,7 @@ function tick() {
   Object.keys(marketHistory).forEach(symbol => {
     const change = (Math.random() * 10) - 5;
     liveMarket[symbol] += change;
-    if (liveMarket[symbol] < 0.01) liveMarket[symbol] = 0.01;
-
+    
     const newPoint = {
       x: Date.now(),
       o: liveMarket[symbol] - change,

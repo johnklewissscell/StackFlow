@@ -250,3 +250,9 @@ setInterval(async () => {
     await updateStock(currentSymbol, currentRange);
   }
 }, 30000);
+
+document.getElementById("refresh-control").onclick = async () => {
+  if (currentSymbol) {
+    await updateStock(currentSymbol, currentRange);
+  }
+};
