@@ -25,16 +25,17 @@ function getPriceAtTime(symbol, timestamp) {
     symbolSeed += symbol.charCodeAt(i);
   }
   
-  const drift = (seededRandom(symbolSeed) - 0.45) * 0.8; 
-  const volatility = (symbolSeed % 10) / 4 + 0.2;
+  const drift = (seededRandom(symbolSeed) - 0.48) * 0.5; 
+  const volatility = (symbolSeed % 10) / 5 + 0.5;
   
-  let price = (symbolSeed % 400) + 100;
-  const intervals = Math.floor(timestamp / 3600000); 
+  let price = (symbolSeed % 300) + 50;
   
-  for (let i = 0; i < 500; i++) {
-    const stepSeed = symbolSeed + (intervals - (500 - i));
-    const change = (seededRandom(stepSeed) - 0.5) * 15 * volatility;
-    price += change + drift;
+  const hourIndex = Math.floor(timestamp / 3600000);
+  
+  for (let i = 0; i < 1000; i++) {
+    const stepSeed = symbolSeed + (hourIndex - (1000 - i));
+    const movement = (seededRandom(stepSeed) - 0.5) * 4 * volatility;
+    price += movement + drift;
   }
   
   return Math.max(0.01, price);
@@ -56,30 +57,32 @@ export async function getHistoricalData(symbol, range = "1M") {
   let intervalGap;
 
   if (range === "1D") {
-    points = 60;
-    intervalGap = 600000;
+    points = 30;
+    intervalGap = 600000; 
   } else if (range === "1M") {
     points = 30;
-    intervalGap = 86400000;
+    intervalGap = 86400000; 
   } else if (range === "1Y") {
     points = 52;
-    intervalGap = 604800000;
+    intervalGap = 604800000; 
   } else {
     points = 60;
-    intervalGap = 2592000000;
+    intervalGap = 2592000000; 
   }
 
   for (let i = points; i >= 0; i--) {
     const t = now - (i * intervalGap);
-    const p = getPriceAtTime(symbol, t);
     
-    const candleSeed = Math.floor(t / 1000) + symbol.length;
-    const v = p * 0.02;
+    const basePrice = getPriceAtTime(symbol, t);
+    const nextPrice = getPriceAtTime(symbol, t + (intervalGap * 0.5));
     
-    const open = p + (seededRandom(candleSeed) * v - (v / 2));
-    const close = p + (seededRandom(candleSeed + 1) * v - (v / 2));
-    const high = Math.max(open, close) + (seededRandom(candleSeed + 2) * v);
-    const low = Math.min(open, close) - (seededRandom(candleSeed + 3) * v);
+    const candleSeed = Math.floor(t / 10000);
+    const noise = basePrice * 0.01;
+
+    const open = basePrice;
+    const close = nextPrice;
+    const high = Math.max(open, close) + (seededRandom(candleSeed) * noise * 2);
+    const low = Math.min(open, close) - (seededRandom(candleSeed + 1) * noise * 2);
 
     data.push({
       x: t,
