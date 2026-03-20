@@ -107,39 +107,63 @@ document.addEventListener("DOMContentLoaded", () => {
     balEl.innerText = newBal.toFixed(2);
   }
 
-  async function createStockRow(portEl, symbol, shares, price) {
-    const tbody = portEl.querySelector("tbody");
-    const totalCost = shares * price;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${symbol}</td>
-      <td>${shares}</td>
-      <td>$${price.toFixed(2)}</td>
-      <td>$${totalCost.toFixed(2)}</td>
-      <td>$${totalCost.toFixed(2)}</td>
-      <td>$0.00</td>
-      <td>0.00%</td>
-      <td>—</td>
-      <td></td>
-    `;
+  async function updatePortfolioValues() {
+  const rows = document.querySelectorAll(".stock-table tbody tr");
+  for (const row of rows) {
+    const symbol = row.cells[0].innerText;
+    if (symbol === "SECRETSAUCE") continue;
+
+    const shares = parseFloat(row.cells[1].innerText);
+    const avgCost = parseCurrency(row.cells[2].innerText);
+    const currentPrice = await getStockPrice(symbol);
     
-    if (symbol !== "SECRETSAUCE") {
-      const sellBtn = document.createElement("button");
-      sellBtn.textContent = "Sell";
-      sellBtn.className = "specialbutton";
-      sellBtn.style.padding = "4px 8px";
-      sellBtn.onclick = async () => {
-        const p = await getStockPrice(symbol);
-        const currentPrice = p || price;
-        adjustCash(portEl, currentPrice * shares);
-        row.remove();
-      };
-      row.children[8].appendChild(sellBtn);
-    } else {
-      row.children[8].innerText = "LOCKED";
-    }
-    tbody.appendChild(row);
+    const marketValue = shares * currentPrice;
+    const gainLoss = marketValue - (shares * avgCost);
+    const gainPercent = ((currentPrice - avgCost) / avgCost) * 100;
+
+    row.cells[4].innerText = `$${marketValue.toFixed(2)}`;
+    row.cells[5].innerText = `$${gainLoss.toFixed(2)}`;
+    row.cells[5].style.color = gainLoss >= 0 ? "green" : "red";
+    row.cells[6].innerText = `${gainPercent.toFixed(2)}%`;
+    row.cells[6].style.color = gainPercent >= 0 ? "green" : "red";
   }
+}
+
+async function createStockRow(portEl, symbol, shares, price) {
+  const tbody = portEl.querySelector("tbody");
+  const totalCost = shares * price;
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${symbol}</td>
+    <td>${shares}</td>
+    <td>$${price.toFixed(2)}</td>
+    <td>$${totalCost.toFixed(2)}</td>
+    <td>$${totalCost.toFixed(2)}</td>
+    <td>$0.00</td>
+    <td>0.00%</td>
+    <td>—</td>
+    <td></td>
+  `;
+  
+  const sellBtn = document.createElement("button");
+  sellBtn.textContent = "Sell";
+  sellBtn.className = "specialbutton";
+  sellBtn.onclick = async () => {
+    const currentPrice = await getStockPrice(symbol);
+    const totalReturn = shares * currentPrice;
+    adjustCash(portEl, totalReturn);
+    row.remove();
+  };
+  row.children[8].appendChild(sellBtn);
+  tbody.appendChild(row);
+}
+
+setInterval(async () => {
+  if (currentSymbol) {
+    await updateStock(currentSymbol, currentRange);
+  }
+  await updatePortfolioValues();
+}, 30000);
 
   async function addStockToPortfolio(portEl) {
     const symbol = prompt("Enter Ticker Symbol:")?.toUpperCase();

@@ -27,7 +27,6 @@ function ensureStockExists(symbol) {
     let price = getDeterministicStartPrice(symbol);
     let data = [];
     const now = Date.now();
-    
     for (let i = 1825; i >= 0; i--) {
       const change = (Math.random() * 10) - 5;
       price += change;
@@ -56,36 +55,28 @@ export async function getCompanyName(symbol) {
 export async function getHistoricalData(symbol, range = "1M") {
   ensureStockExists(symbol);
   const allData = marketHistory[symbol];
-  
-  let pointsToReturn;
-  switch (range) {
-    case "1D": pointsToReturn = 20; break;
-    case "1M": pointsToReturn = 30; break;
-    case "1Y": pointsToReturn = 365; break;
-    case "5Y": pointsToReturn = 1825; break;
-    default: pointsToReturn = 30;
-  }
-  
-  return allData.slice(-pointsToReturn);
+  let points;
+  if (range === "1D") points = 20;
+  else if (range === "1M") points = 30;
+  else if (range === "1Y") points = 365;
+  else points = 1825;
+  return allData.slice(-points);
 }
 
 function tick() {
   if (!isMarketOpen()) return;
-
   Object.keys(marketHistory).forEach(symbol => {
     const change = (Math.random() * 10) - 5;
     liveMarket[symbol] += change;
-    
-    const newPoint = {
+    if (liveMarket[symbol] < 0.01) liveMarket[symbol] = 0.01;
+    marketHistory[symbol].push({
       x: Date.now(),
       o: liveMarket[symbol] - change,
       h: liveMarket[symbol] + 1,
       l: liveMarket[symbol] - 1,
       c: liveMarket[symbol]
-    };
-    
-    marketHistory[symbol].push(newPoint);
-    marketHistory[symbol].shift(); 
+    });
+    marketHistory[symbol].shift();
   });
 }
 
