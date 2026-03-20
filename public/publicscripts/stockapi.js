@@ -1,52 +1,40 @@
-const API_KEY = 'SE35V6BRI6YHQ6TJ';
+const liveMarket = {};
+
+const STARTING_PRICES = {
+  "AAPL": 249.12,
+  "TSLA": 382.45,
+  "NVDA": 178.90,
+  "GME": 15.20,
+  "BTC": 72000.00
+};
 
 export async function getStockPrice(symbol) {
-  try {
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const price = data["Global Quote"]["05. price"];
-    return parseFloat(price);
-  } catch (err) {
-    let hash = 0;
-    for (let i = 0; i < symbol.length; i++) hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
-    return Math.abs((hash % 200) + 50);
+  if (!liveMarket[symbol]) {
+    liveMarket[symbol] = STARTING_PRICES[symbol] || Math.floor(Math.random() * 400) + 20;
   }
+  return liveMarket[symbol];
 }
 
-export async function getCompanyName(symbol) {
-  try {
-    const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${symbol}&apikey=${API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.bestMatches[0]["2. name"];
-  } catch {
-    return `${symbol} Corp`;
-  }
+export function updateMarketPrices() {
+  Object.keys(liveMarket).forEach(symbol => {
+    const change = (Math.random() * 10) - 5;
+    liveMarket[symbol] += change;
+    
+    if (liveMarket[symbol] < 0.01) liveMarket[symbol] = 0.01;
+    
+    console.log(`${symbol} moved by ${change.toFixed(2)}. New price: ${liveMarket[symbol].toFixed(2)}`);
+  });
 }
 
 export async function getHistoricalData(symbol, range = "1M") {
-  try {
-    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const timeSeries = data["Time Series (Daily)"];
-    
-    return Object.keys(timeSeries).map(date => ({
-      x: new Date(date).getTime(),
-      o: parseFloat(timeSeries[date]["1. open"]),
-      h: parseFloat(timeSeries[date]["2. high"]),
-      l: parseFloat(timeSeries[date]["3. low"]),
-      c: parseFloat(timeSeries[date]["4. close"])
-    })).reverse();
-  } catch (err) {
-    let chart = [];
-    let p = 150;
-    for(let i=30; i>=0; i--) {
-      let d = new Date(); d.setDate(d.getDate()-i);
-      p += (Math.random()-0.5)*5;
-      chart.push({x: d.getTime(), o:p, h:p+2, l:p-2, c:p+1});
-    }
-    return chart;
+  let price = await getStockPrice(symbol);
+  let data = [];
+  const points = range === "1Y" ? 100 : 30;
+  for (let i = points; i >= 0; i--) {
+    let d = new Date();
+    d.setDate(d.getDate() - i);
+    price += (Math.random() * 10) - 5;
+    data.push({ x: d.getTime(), o: price, h: price + 2, l: price - 2, c: price });
   }
+  return data;
 }
