@@ -1,6 +1,11 @@
 const liveMarket = {};
 const marketHistory = {};
 
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 function isMarketOpen() {
   const now = new Date();
   const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
@@ -14,38 +19,27 @@ function isMarketOpen() {
   return totalMinutes >= 570 && totalMinutes < 960;
 }
 
-function getDeterministicStartPrice(symbol) {
-  let hash = 0;
+function getPriceAtTime(symbol, timestamp) {
+  let symbolSeed = 0;
   for (let i = 0; i < symbol.length; i++) {
-    hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
+    symbolSeed += symbol.charCodeAt(i);
   }
-  return Math.abs(hash % 900) + 10;
-}
-
-function ensureStockExists(symbol) {
-  if (!marketHistory[symbol]) {
-    let price = getDeterministicStartPrice(symbol);
-    let data = [];
-    const now = Date.now();
-    for (let i = 1825; i >= 0; i--) {
-      const change = (Math.random() * 10) - 5;
-      price += change;
-      data.push({
-        x: now - (i * 86400000),
-        o: price - change,
-        h: price + 2,
-        l: price - 2,
-        c: price
-      });
-    }
-    marketHistory[symbol] = data;
-    liveMarket[symbol] = price;
+  
+  let price = (symbolSeed % 500) + 20;
+  const intervals = Math.floor(timestamp / 30000);
+  
+  for (let i = 0; i < 100; i++) {
+    const stepSeed = symbolSeed + (intervals - (100 - i));
+    const move = (seededRandom(stepSeed) * 10) - 5;
+    price += move;
   }
+  
+  return Math.max(0.01, price);
 }
 
 export async function getStockPrice(symbol) {
-  ensureStockExists(symbol);
-  return liveMarket[symbol];
+  const now = Date.now();
+  return getPriceAtTime(symbol, now);
 }
 
 export async function getCompanyName(symbol) {
@@ -53,31 +47,35 @@ export async function getCompanyName(symbol) {
 }
 
 export async function getHistoricalData(symbol, range = "1M") {
-  ensureStockExists(symbol);
-  const allData = marketHistory[symbol];
+  const now = Date.now();
+  let data = [];
   let points;
-  if (range === "1D") points = 20;
-  else if (range === "1M") points = 30;
-  else if (range === "1Y") points = 365;
-  else points = 1825;
-  return allData.slice(-points);
-}
+  let intervalGap;
 
-function tick() {
-  if (!isMarketOpen()) return;
-  Object.keys(marketHistory).forEach(symbol => {
-    const change = (Math.random() * 10) - 5;
-    liveMarket[symbol] += change;
-    if (liveMarket[symbol] < 0.01) liveMarket[symbol] = 0.01;
-    marketHistory[symbol].push({
-      x: Date.now(),
-      o: liveMarket[symbol] - change,
-      h: liveMarket[symbol] + 1,
-      l: liveMarket[symbol] - 1,
-      c: liveMarket[symbol]
+  if (range === "1D") {
+    points = 40;
+    intervalGap = 30000;
+  } else if (range === "1M") {
+    points = 30;
+    intervalGap = 86400000;
+  } else if (range === "1Y") {
+    points = 100;
+    intervalGap = 315360000;
+  } else {
+    points = 200;
+    intervalGap = 788400000;
+  }
+
+  for (let i = points; i >= 0; i--) {
+    const t = now - (i * intervalGap);
+    const p = getPriceAtTime(symbol, t);
+    data.push({
+      x: t,
+      o: p,
+      h: p + 1,
+      l: p - 1,
+      c: p
     });
-    marketHistory[symbol].shift();
-  });
+  }
+  return data;
 }
-
-setInterval(tick, 30000);
