@@ -8,6 +8,21 @@ const STARTING_PRICES = {
   "BTC": 72000.00
 };
 
+function isMarketOpen() {
+  const now = new Date();
+  const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etDate = new Date(etString);
+  
+  const day = etDate.getDay();
+  const hour = etDate.getHours();
+  const minute = etDate.getMinutes();
+
+  if (day === 0 || day === 6) return false;
+
+  const totalMinutes = (hour * 60) + minute;
+  return totalMinutes >= 570 && totalMinutes < 960;
+}
+
 export async function getStockPrice(symbol) {
   if (!liveMarket[symbol]) {
     liveMarket[symbol] = STARTING_PRICES[symbol] || Math.floor(Math.random() * 400) + 20;
@@ -16,15 +31,19 @@ export async function getStockPrice(symbol) {
 }
 
 export function updateMarketPrices() {
-  Object.keys(liveMarket).forEach(symbol => {
+  if (!isMarketOpen()) return;
+
+  Object.keys(STARTING_PRICES).forEach(symbol => {
+    if (!liveMarket[symbol]) liveMarket[symbol] = STARTING_PRICES[symbol];
+
     const change = (Math.random() * 10) - 5;
     liveMarket[symbol] += change;
     
     if (liveMarket[symbol] < 0.01) liveMarket[symbol] = 0.01;
-    
-    console.log(`${symbol} moved by ${change.toFixed(2)}. New price: ${liveMarket[symbol].toFixed(2)}`);
   });
 }
+
+setInterval(updateMarketPrices, 30000);
 
 export async function getHistoricalData(symbol, range = "1M") {
   let price = await getStockPrice(symbol);
