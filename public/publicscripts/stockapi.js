@@ -31,14 +31,14 @@ function getPriceAtTime(symbol, timestamp) {
   let price = (symbolSeed % 400) + 100;
   
   const intervalIndex = Math.floor(timestamp / 30000);
-  const historyWindow = 1000;
+  const historyWindow = 2000;
   const startPoint = intervalIndex - historyWindow;
 
   for (let i = 0; i < historyWindow; i++) {
     const stepSeed = symbolSeed + (startPoint + i);
     const randomNoise = (seededRandom(stepSeed) - 0.5) * 2 * volatility;
     
-    price += trendDirection + randomNoise;
+    price += (trendDirection + randomNoise);
   }
   
   return Math.max(0.01, price);
