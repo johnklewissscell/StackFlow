@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("chart-container");
     const canvas = document.getElementById("stockChart");
 
-    stockInfo.innerHTML = `<div style="color: #666; font-style: italic;">Fetching ${symbol}...</div>`;
+    stockInfo.innerHTML = `<div style="color: #666; font-style: italic;">Analyzing ${symbol}...</div>`;
 
     const [price, name, candles] = await Promise.all([
       getStockPrice(symbol),
@@ -34,8 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const displayName = name && name !== symbol ? `${name} (${symbol})` : symbol;
     stockInfo.innerHTML = `
-      <strong style="font-size:20px; color: #000; display: block; margin-bottom: 4px;">${displayName}</strong>
-      <span style="color: #000; font-weight: 600; font-size: 24px;">$${price.toFixed(2)}</span>
+      <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 5px solid #203a43;">
+        <strong style="font-size:22px; color: #203a43; display: block; margin-bottom: 4px;">${displayName}</strong>
+        <span style="color: #000; font-weight: 700; font-size: 28px;">$${price.toFixed(2)}</span>
+      </div>
     `;
 
     container.style.display = "block";
@@ -68,10 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
           x: {
             type: "time",
             time: { unit: range === "1D" ? "hour" : "day" },
-            ticks: { color: "#000", maxTicksLimit: 10 }
+            ticks: { color: "#333", maxTicksLimit: 10 }
           },
           y: { 
-            ticks: { color: "#000" },
+            ticks: { color: "#333" },
             beginAtZero: false 
           }
         }
@@ -86,8 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  document.getElementById("toggleCandle").addEventListener("click", () => {
+  document.getElementById("toggleCandle").addEventListener("click", (e) => {
     preferCandlestick = !preferCandlestick;
+    e.target.innerText = preferCandlestick ? "Switch to Line" : "Try Candlestick";
     if (currentSymbol) updateStock(currentSymbol, currentRange);
   });
 
@@ -123,6 +126,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (symbol !== "SECRETSAUCE") {
       const sellBtn = document.createElement("button");
       sellBtn.textContent = "Sell";
+      sellBtn.className = "specialbutton";
+      sellBtn.style.padding = "4px 8px";
       sellBtn.onclick = async () => {
         const p = await getStockPrice(symbol);
         const currentPrice = p || price;
@@ -145,12 +150,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isNaN(shares) || shares <= 0) return;
 
     if (symbol === "GME" && shares >= 10) {
-      alert("Diamond Hands Bonus Activated! +$100");
+      alert("Diamond Hands Bonus! +$100.00");
       adjustCash(portEl, 100);
     }
     
     if (symbol === "SECRETSAUCE") {
-      alert("Found the Secret Sauce! +$500");
+      alert("Found the Hidden Formula! +$500.00");
       adjustCash(portEl, 500);
     }
 
@@ -159,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (symbol === "SECRETSAUCE") {
         price = 0;
       } else {
-        const manualPrice = prompt("Price not found. Enter price manually:");
+        const manualPrice = prompt("Market closed or symbol unknown. Enter cost per share:");
         price = parseFloat(manualPrice);
       }
     }
@@ -170,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentBalance = parseCurrency(portEl.querySelector(".portfolio-balance").innerText);
     
     if (cost > currentBalance) {
-      return alert("Insufficient funds for this trade.");
+      return alert("Transaction declined: Insufficient Cash.");
     }
 
     adjustCash(portEl, -cost);
@@ -181,47 +186,47 @@ document.addEventListener("DOMContentLoaded", () => {
     let fBal = bal;
     const n = name.trim();
 
-    const easterEggs = {
+    const mods = {
       "Mastercard": () => fBal *= 2,
       "Bitcoin": () => fBal *= 3,
       "Elon": () => fBal = 1000000,
       "Warren": () => fBal += 10000,
       "Jeff": () => fBal = 500000,
-      "Tesla": () => fBal = 69000,
+      "Tesla": () => fBal = 69420,
       "MemeCoin": () => fBal += 420,
       "DogeCoin": () => fBal += 1337,
-      "Unicorn": () => fBal = 1111,
-      "Rainbow": () => fBal = 777
+      "Unicorn": () => fBal = 11111,
+      "Rainbow": () => fBal = 7777
     };
 
-    if (easterEggs[n]) easterEggs[n]();
+    if (mods[n]) mods[n]();
 
     const port = document.createElement("div");
     port.className = "portfolio";
-    port.style = "border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff;";
+    port.style = "background: #fff; border: 1px solid #ccc; padding: 20px; margin-bottom: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);";
     port.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 contenteditable="true" style="margin: 0;">${n}</h3>
-        <button class="del-port" style="background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 contenteditable="true" style="margin: 0; color: #203a43; font-size: 22px;">${n}</h3>
+        <button class="del-port" style="background: #e63946; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">Delete</button>
       </div>
-      <p style="font-size: 18px; margin: 10px 0;">Balance: $<span class="portfolio-balance">${fBal.toFixed(2)}</span></p>
-      <button class="add-s" style="margin-bottom: 10px; padding: 8px 12px; cursor: pointer;">Add Stock</button>
+      <p style="font-size: 20px; font-weight: 600; margin: 10px 0;">Available Cash: $<span class="portfolio-balance">${fBal.toFixed(2)}</span></p>
+      <button class="add-s specialbutton" style="margin-bottom: 20px;">+ Add Stock</button>
       <div style="overflow-x: auto;">
         <table class="stock-table" style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="text-align: left; border-bottom: 2px solid #eee;">
-              <th>Ticker</th>
+            <tr style="background: #f1f1f1; text-align: left;">
+              <th style="padding: 10px;">Ticker</th>
               <th>Shares</th>
               <th>Cost</th>
               <th>Total</th>
               <th>Market</th>
               <th>Gain</th>
               <th>%</th>
-              <th>Port %</th>
+              <th>Weight</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody style="font-family: 'Courier New', monospace;"></tbody>
         </table>
       </div>
     `;
@@ -231,7 +236,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.getElementById("add-portfolio").onclick = () => {
-    const n = prompt("Enter Portfolio Name:");
+    const n = prompt("Give your portfolio a name:");
     if (n) createPortfolio(n);
+  };
+
+  document.getElementById("refresh-control").onclick = () => {
+    if (currentSymbol) updateStock(currentSymbol, currentRange);
   };
 });
