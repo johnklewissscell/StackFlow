@@ -25,16 +25,16 @@ function getPriceAtTime(symbol, timestamp) {
     symbolSeed += symbol.charCodeAt(i);
   }
   
-  const drift = (seededRandom(symbolSeed) - 0.5) * 2;
-  const volatility = (symbolSeed % 10) / 5 + 0.5;
+  const drift = (seededRandom(symbolSeed) - 0.45) * 0.8; 
+  const volatility = (symbolSeed % 10) / 4 + 0.2;
   
-  let price = (symbolSeed % 500) + 50;
-  const intervals = Math.floor(timestamp / 30000);
+  let price = (symbolSeed % 400) + 100;
+  const intervals = Math.floor(timestamp / 3600000); 
   
-  for (let i = 0; i < 150; i++) {
-    const stepSeed = symbolSeed + (intervals - (150 - i));
-    const noise = (seededRandom(stepSeed) * 10 - 5) * volatility;
-    price += noise + (drift * 2);
+  for (let i = 0; i < 500; i++) {
+    const stepSeed = symbolSeed + (intervals - (500 - i));
+    const change = (seededRandom(stepSeed) - 0.5) * 15 * volatility;
+    price += change + drift;
   }
   
   return Math.max(0.01, price);
@@ -56,31 +56,30 @@ export async function getHistoricalData(symbol, range = "1M") {
   let intervalGap;
 
   if (range === "1D") {
-    points = 40;
-    intervalGap = 30000;
+    points = 60;
+    intervalGap = 600000;
   } else if (range === "1M") {
     points = 30;
     intervalGap = 86400000;
   } else if (range === "1Y") {
-    points = 100;
-    intervalGap = 315360000;
+    points = 52;
+    intervalGap = 604800000;
   } else {
-    points = 200;
-    intervalGap = 788400000;
+    points = 60;
+    intervalGap = 2592000000;
   }
 
   for (let i = points; i >= 0; i--) {
     const t = now - (i * intervalGap);
     const p = getPriceAtTime(symbol, t);
     
-    const candleSeed = t + symbol.length;
-    const bodySize = p * 0.015;
-    const wickSize = p * 0.03;
+    const candleSeed = Math.floor(t / 1000) + symbol.length;
+    const v = p * 0.02;
     
-    const open = p + (seededRandom(candleSeed) * bodySize - (bodySize / 2));
-    const close = p + (seededRandom(candleSeed + 1) * bodySize - (bodySize / 2));
-    const high = Math.max(open, close) + (seededRandom(candleSeed + 2) * wickSize);
-    const low = Math.min(open, close) - (seededRandom(candleSeed + 3) * wickSize);
+    const open = p + (seededRandom(candleSeed) * v - (v / 2));
+    const close = p + (seededRandom(candleSeed + 1) * v - (v / 2));
+    const high = Math.max(open, close) + (seededRandom(candleSeed + 2) * v);
+    const low = Math.min(open, close) - (seededRandom(candleSeed + 3) * v);
 
     data.push({
       x: t,
