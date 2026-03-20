@@ -246,9 +246,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 setInterval(() => {
-  const currentSymbol = document.getElementById("stock-symbol").value.trim().toUpperCase();
-  if (currentSymbol) {
-    updateStock(currentSymbol, currentRange);
-    console.log("Auto-refreshing simulate market data...");
+  const symbolInput = document.getElementById("stock-symbol");
+  const symbol = symbolInput ? symbolInput.value.trim().toUpperCase() : null;
+  
+  if (symbol && currentSymbol === symbol) {
+    updateStock(symbol, currentRange);
+    console.log("Market Tick: Chart updated with persistent data.");
   }
-}, 5000);
+}, 30000);
