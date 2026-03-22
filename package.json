@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "keywords": [],
   "author": "johnklewissscell",
@@ -25,5 +27,8 @@
   "repository": {
     "type": "git",
     "url": "StackFlow"
+  },
+  "devDependencies": {
+    "wrangler": "^4.76.0"
   }
 }
