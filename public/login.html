@@ -27,22 +27,31 @@
   </header>
 
   <main>
+  <div class="login-container">
     <section class="login-section">
-      <h2>Log In to StackFlow</h2>
+      <h2>Welcome Back!</h2>
+      <p class="subtitle">Log in to continue to StackFlow</p>
 
       <form id="login-form" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required>
+        </div>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
 
         <button type="submit">Log In</button>
       </form>
 
-      <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+      <p class="signup-text">
+        Don't have an account? <a href="signup.html">Sign Up</a>
+      </p>
     </section>
-  </main>
+  </div>
+</main>
 
   <script type="module" src="/publicscripts/login.js"></script>
 </body>

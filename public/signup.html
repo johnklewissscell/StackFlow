@@ -26,22 +26,35 @@
   </header>
 
   <main>
+  <div class="signup-container">
     <section class="signup-section">
-      <h2>Create a StackFlow Account</h2>
+      <h2>Create Account</h2>
+      <p class="subtitle">Join StackFlow and start building smarter</p>
+
       <form id="signup-form">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required>
+        </div>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
 
-        <button type="submit">Sign Up</button>
+        <button type="submit">Create Account</button>
       </form>
-      <p>Already have an account? <a href="login.html">Log In</a></p>
+
+      <p class="login-text">
+        Already have an account? <a href="login.html">Log In</a>
+      </p>
     </section>
-  </main>
+  </div>
+</main>
 </body>
 </html>
